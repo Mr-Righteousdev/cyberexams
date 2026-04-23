@@ -1,0 +1,38 @@
+{
+  "workflow": "gsd",
+  "preferences": {
+    "auto": false,
+    "skipQuestions": false,
+    "skipResearch": false,
+    "skipRoadmap": false
+  },
+  "tech": {
+    "stack": "laravel-livewire",
+    "php": "8.3",
+    "laravel": "13",
+    "livewire": "4",
+    "database": "mysql"
+  },
+  "paths": {
+    "planning": ".planning",
+    "research": ".planning/research",
+    "templates": ".planning/templates"
+  },
+  "docs": [
+    "PROJECT.md",
+    "REQUIREMENTS.md",
+    "ROADMAP.md",
+    "STATE.md"
+  ],
+  "agents": {
+    "codebase_mappers": 4,
+    "researchers": 4,
+    "assumptions_analyzers": 2,
+    "code_reviewers": 2
+  },
+  "phases": {
+    "min": 1,
+    "max": 6,
+    "default": 6
+  }
+}
