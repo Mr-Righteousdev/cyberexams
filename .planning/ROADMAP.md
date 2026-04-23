@@ -241,9 +241,9 @@ Plans:
 **Plans:** 3 plans
 
 Plans:
-- [ ] 04-01-PLAN.md — Frontend anti-cheat guards (copy/paste, right-click, shortcuts, text selection)
-- [ ] 04-02-PLAN.md — Tab/window switch detection with auto-submit
-- [ ] 04-03-PLAN.md — Server-side IP change detection
+- [ ] 06-01-PLAN.md — Error pages, empty-state component, responsive layout audit
+- [ ] 06-02-PLAN.md — Flash messages + loading states for all admin CRUD actions
+- [ ] 06-03-PLAN.md — Security smoke tests (HTTP + Playwright) and security hook verification
 
 ---
 
@@ -269,39 +269,47 @@ Plans:
 
 ### Tasks
 
-1. [ ] GradingService implementation:
-   - [ ] Auto-grade MCQ/TF
-   - [ ] Leave short answer null
-   - [ ] Calculate percentage
-   - [ ] Determine pass/fail
-2. [ ] Per-session result view (admin):
-   - [ ] Student info
-   - [ ] Score/percentage
-   - [ ] Per-question answers
-   - [ ] Correct vs student answer
-3. [ ] Manual grading UI:
-   - [ ] List short answers needing review
-   - [ ] Grant marks form
-4. [ ] Results list per exam:
-   - [ ] All students
-   - [ ] Scores
-   - [ ] Flags
-   - [ ] Time taken
-5. [ ] CSV export
-6. [ ] Live monitor:
-   - [ ] Polling active sessions
-   - [ ] Questions answered
-   - [ ] Time remaining
-   - [ ] Flag status
-7. [ ] Basic analytics:
-   - [ ] Average score
-   - [ ] Pass rate
-   - [ ] Question difficulty (% correct)
+1. [X] GradingService implementation:
+   - [X] Auto-grade MCQ/TF
+   - [X] Leave short answer null
+   - [X] Calculate percentage
+   - [X] Determine pass/fail
+2. [X] Per-session result view (admin):
+   - [X] Student info
+   - [X] Score/percentage
+   - [X] Per-question answers
+   - [X] Correct vs student answer
+3. [X] Manual grading UI:
+   - [X] List short answers needing review
+   - [X] Grant marks form
+4. [X] Results list per exam:
+   - [X] All students
+   - [X] Scores
+   - [X] Flags
+   - [X] Time taken
+5. [X] CSV export
+6. [X] Live monitor:
+   - [X] Polling active sessions
+   - [X] Questions answered
+   - [X] Time remaining
+   - [X] Flag status
+7. [X] Basic analytics:
+   - [X] Average score
+   - [X] Pass rate
+   - [X] Question difficulty (% correct)
 
 **Success Criteria:**
-- [ ] Full grading workflow works
-- [ ] CSV exports correctly
-- [ ] Analytics display
+- [X] Full grading workflow works
+- [X] CSV exports correctly
+- [X] Analytics display
+
+**Plans:** 4 plans
+
+Plans:
+- [X] 05-01-PLAN.md — Dashboard, CSV export, analytics (ADMIN-01, GRAD-06, GRAD-07)
+- [X] 05-02-PLAN.md — Per-session and per-exam results views (GRAD-03, GRAD-05)
+- [X] 05-03-PLAN.md — Manual grading queue and workflow (GRAD-02, GRAD-04)
+- [X] 05-04-PLAN.md — Live monitor, flagged sessions (ADMIN-03, ADMIN-04)
 
 ---
 
@@ -311,25 +319,25 @@ Plans:
 
 ### Tasks
 
-1. [ ] Responsive UI pass:
-   - [ ] Test on laptop sizes
-   - [ ] Fix layout issues
-2. [ ] Error states:
-   - [ ] Exam expired
-   - [ ] Already submitted
-   - [ ] Network blocked
-   - [ ] Session not found
-3. [ ] Empty states:
-   - [ ] No exams published
-   - [ ] No results
-4. [ ] Flash messages for all admin actions
-5. [ ] Loading states (wire:loading)
-6. [ ] Security QA:
-   - [ ] Student cannot access admin routes
-   - [ ] Duplicate exam start blocked
-   - [ ] Auto-submit fires reliably
-   - [ ] IP binding works
-   - [ ] Network guard blocks external
+1. [X] Responsive UI pass:
+   - [X] Test on laptop sizes
+   - [X] Fix layout issues
+2. [X] Error states:
+   - [X] Exam expired
+   - [X] Already submitted
+   - [X] Network blocked
+   - [X] Session not found
+3. [X] Empty states:
+   - [X] No exams published
+   - [X] No results
+4. [X] Flash messages for all admin actions
+5. [X] Loading states (wire:loading)
+6. [X] Security QA:
+   - [X] Student cannot access admin routes
+   - [X] Duplicate exam start blocked
+   - [X] Auto-submit fires reliably
+   - [X] IP binding works
+   - [X] Network guard blocks external
 
 ### Requirements Covered
 
@@ -338,9 +346,16 @@ Plans:
 | All prior | All v1 requirements should now work |
 
 **Success Criteria:**
-- [ ] All phases complete
-- [ ] Security verification passes
-- [ ] Ready for production use
+- [X] All phases complete
+- [X] Security verification passes
+- [X] Ready for production use
+
+**Plans:** 3 plans
+
+Plans:
+- [ ] 06-01-PLAN.md — Error pages, empty-state component, responsive layout audit
+- [ ] 06-02-PLAN.md — Flash messages + loading states for all admin CRUD actions
+- [ ] 06-03-PLAN.md — Security smoke tests (HTTP + Playwright) and security hook verification
 
 ---
 

@@ -51,9 +51,9 @@ A secured, local exam environment where students can take proctored exams with a
 
 ## Current Phase
 
-**Project phase:** Not started
+**Project phase:** Phase 6 — Polish & QA
 
-**Current focus:** Awaiting Phase 1 execution
+**Current focus:** Completed
 
 ## State
 
@@ -63,8 +63,8 @@ A secured, local exam environment where students can take proctored exams with a
 | 2 | Exam Builder | Not started |
 | 3 | Exam Session Engine | Not started |
 | 4 | Anti-Cheat Guards | Not started |
-| 5 | Results & Admin | Not started |
-| 6 | Polish & QA | Not started |
+| 5 | Results & Admin | Complete |
+| 6 | Polish & QA | Complete |
 
 ## Recent Changes
 
