@@ -5,6 +5,7 @@ namespace App\Livewire\Admin;
 use App\Models\Exam;
 use App\Models\Option;
 use App\Models\Question;
+use Flux\Flux;
 use Livewire\Component;
 
 class QuestionCreate extends Component
@@ -124,7 +125,7 @@ class QuestionCreate extends Component
             }
         }
 
-        $this->dispatch('notify', ['message' => 'Question created.', 'type' => 'success']);
+        Flux::toast(variant: 'success', text: 'Question created.');
 
         return redirect()->route('admin.exams.questions.index', $this->exam);
     }

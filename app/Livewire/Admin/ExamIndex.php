@@ -3,6 +3,7 @@
 namespace App\Livewire\Admin;
 
 use App\Models\Exam;
+use Flux\Flux;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -21,7 +22,7 @@ class ExamIndex extends Component
     {
         $exam->delete();
 
-        $this->dispatch('notify', ['message' => 'Exam deleted successfully.', 'type' => 'success']);
+        Flux::toast(variant: 'success', text: 'Exam deleted successfully.');
     }
 
     public function togglePublish(Exam $exam)
@@ -29,6 +30,6 @@ class ExamIndex extends Component
         $exam->update(['is_published' => ! $exam->is_published]);
 
         $status = $exam->is_published ? 'published' : 'unpublished';
-        $this->dispatch('notify', ["Exam {$status} successfully.", 'type' => 'success']);
+        Flux::toast(variant: 'success', text: "Exam {$status} successfully.");
     }
 }

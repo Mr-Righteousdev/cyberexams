@@ -15,9 +15,13 @@
             @endif
 
             @if ($exams->isEmpty())
-                <div class="bg-white rounded-lg shadow p-12 text-center">
-                    <p class="text-gray-500">No exams created yet. Create your first exam to get started.</p>
-                </div>
+                <x-empty-state
+                    title="No exams yet"
+                    description="Create your first exam to get started."
+                    actionRoute="{{ route('admin.exams.create') }}"
+                    actionLabel="Create Exam"
+                    icon="clipboard"
+                />
             @else
                 <div class="bg-white rounded-lg shadow overflow-hidden">
                     <table class="min-w-full divide-y divide-gray-200">

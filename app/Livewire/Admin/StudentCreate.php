@@ -3,6 +3,7 @@
 namespace App\Livewire\Admin;
 
 use App\Models\User;
+use Flux\Flux;
 use Illuminate\Support\Facades\Hash;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -51,7 +52,7 @@ class StudentCreate extends Component
             'is_active' => true,
         ]);
 
-        $this->dispatch('notify', ['Student created. Default password: password', 'type' => 'success']);
+        Flux::toast(variant: 'success', text: 'Student created. Default password: password');
         $this->reset(['name', 'email', 'student_number']);
     }
 
@@ -93,7 +94,7 @@ class StudentCreate extends Component
         }
 
         if ($created > 0) {
-            $this->dispatch('notify', ["Created {$created} students. Default password: password", 'type' => 'success']);
+            Flux::toast(variant: 'success', text: "Created {$created} students. Default password: password");
             $this->manual_students = '';
         }
     }

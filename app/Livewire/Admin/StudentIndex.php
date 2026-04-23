@@ -3,6 +3,7 @@
 namespace App\Livewire\Admin;
 
 use App\Models\User;
+use Flux\Flux;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -23,18 +24,18 @@ class StudentIndex extends Component
     {
         $user->update(['is_active' => ! $user->is_active]);
         $status = $user->fresh()->is_active ? 'activated' : 'deactivated';
-        $this->dispatch('notify', ["Student {$status}.", 'type' => 'success']);
+        Flux::toast(variant: 'success', text: "Student {$status}.");
     }
 
     public function resetPassword(User $user)
     {
         $user->update(['password' => bcrypt('password')]);
-        $this->dispatch('notify', ['Password reset to "password".', 'type' => 'success']);
+        Flux::toast(variant: 'success', text: 'Password reset to "password".');
     }
 
     public function delete(User $user)
     {
         $user->delete();
-        $this->dispatch('notify', ['Student deleted.', 'type' => 'success']);
+        Flux::toast(variant: 'success', text: 'Student deleted.');
     }
 }

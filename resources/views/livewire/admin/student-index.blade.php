@@ -9,9 +9,13 @@
             </div>
 
             @if ($students->isEmpty())
-                <div class="bg-white rounded-lg shadow p-12 text-center">
-                    <p class="text-gray-500">No students registered yet.</p>
-                </div>
+                <x-empty-state
+                    title="No students yet"
+                    description="Add students to get started."
+                    actionRoute="{{ route('admin.students.create') }}"
+                    actionLabel="Add Student"
+                    icon="users"
+                />
             @else
                 <div class="bg-white rounded-lg shadow overflow-hidden">
                     <table class="min-w-full divide-y divide-gray-200">

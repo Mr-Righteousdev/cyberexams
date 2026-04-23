@@ -81,8 +81,12 @@
                         <a href="{{ route('admin.exams.index') }}" class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
                             Cancel
                         </a>
-                        <button type="submit" class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700">
-                            {{ $exam ? 'Update' : 'Create' }} Exam
+                        <button type="submit"
+                                wire:loading.attr="disabled"
+                                wire:loading.class.add("opacity-50 cursor-not-allowed")
+                                class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed">
+                            <span wire:loading wire:target="save">Saving...</span>
+                            <span wire:target="save">{{ $exam ? 'Update' : 'Create' }} Exam</span>
                         </button>
                     </div>
                 </form>

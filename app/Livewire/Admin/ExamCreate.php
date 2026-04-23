@@ -4,6 +4,7 @@ namespace App\Livewire\Admin;
 
 use App\Models\Exam;
 use Carbon\Carbon;
+use Flux\Flux;
 use Livewire\Component;
 
 class ExamCreate extends Component
@@ -87,13 +88,11 @@ class ExamCreate extends Component
 
         if ($this->exam) {
             $this->exam->update($data);
-            $message = 'Exam updated successfully.';
+            Flux::toast(variant: 'success', text: 'Exam updated successfully.');
         } else {
             Exam::create($data);
-            $message = 'Exam created successfully.';
+            Flux::toast(variant: 'success', text: 'Exam created successfully.');
         }
-
-        session()->flash('success', $message);
 
         return redirect()->route('admin.exams.index');
     }
