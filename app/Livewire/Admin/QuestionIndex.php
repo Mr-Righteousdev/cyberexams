@@ -10,9 +10,19 @@ class QuestionIndex extends Component
 {
     public Exam $exam;
 
+    public string $viewMode = 'cards';
+
+    public ?string $typeFilter = null;
+
     public function render()
     {
-        $questions = $this->exam->questions()->orderBy('order')->get();
+        $query = $this->exam->questions()->orderBy('order');
+
+        if ($this->typeFilter) {
+            $query->where('type', $this->typeFilter);
+        }
+
+        $questions = $query->get();
 
         return view('livewire.admin.question-index', compact('questions'));
     }

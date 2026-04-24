@@ -2,13 +2,13 @@
 
 namespace App\Livewire\Student;
 
-use App\Models\Answer;
 use App\Models\ActivityLog;
+use App\Models\Answer;
 use App\Models\Exam;
 use App\Models\ExamSession;
 use App\Models\Question;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
 use Livewire\Component;
 
 class ExamTaking extends Component
@@ -44,6 +44,16 @@ class ExamTaking extends Component
 
     public function mount(ExamSession $session): void
     {
+        Log::info('[ExamTaking] mount() called', [
+            'session_id' => $session->id,
+            'exam_id' => $session->exam_id,
+            'user_id' => $session->user_id,
+            'is_submitted' => $session->is_submitted,
+            'submitted_at' => $session->submitted_at,
+            'started_at' => $session->started_at,
+            'now' => now()->format('Y-m-d H:i:s'),
+        ]);
+
         $this->session = $session;
         $this->exam = $session->exam;
 
@@ -55,7 +65,13 @@ class ExamTaking extends Component
         $this->checkIpChange();
 
         // Already submitted check (SESS-08)
+        Log::info('[ExamTaking] Check: is session already submitted?', [
+            'is_submitted' => $session->is_submitted,
+            'submitted_at' => $session->submitted_at,
+        ]);
+
         if ($session->is_submitted) {
+            Log::info('[ExamTaking] REDIRECT to results - session already submitted');
             $this->redirectRoute('student.results', ['session' => $session]);
 
             return;
@@ -70,11 +86,20 @@ class ExamTaking extends Component
         }
         $this->questions = $query->get();
 
+        Log::info('[ExamTaking] Questions loaded', [
+            'count' => $this->questions->count(),
+        ]);
+
         // Compute remaining time (SESS-06)
         $this->remainingSeconds = $this->getRemainingSeconds();
 
+        Log::info('[ExamTaking] Remaining seconds calculated', [
+            'remaining' => $this->remainingSeconds,
+        ]);
+
         // Auto-submit if time is up
         if ($this->remainingSeconds <= 0) {
+            Log::info('[ExamTaking] Time is up, auto-submitting...');
             $this->submit();
 
             return;
@@ -110,7 +135,7 @@ class ExamTaking extends Component
             // Flag but don't block
             $this->session->update([
                 'is_flagged' => true,
-                'flag_reason' => 'IP address changed: ' . $originalIp . ' -> ' . $currentIp,
+                'flag_reason' => 'IP address changed: '.$originalIp.' -> '.$currentIp,
             ]);
 
             $this->isIpChanged = true;
@@ -150,7 +175,7 @@ class ExamTaking extends Component
         if ($this->tabSwitchCount >= $this->maxTabSwitches) {
             $this->session->update([
                 'is_flagged' => true,
-                'flag_reason' => 'Auto-submitted: ' . $this->maxTabSwitches . ' tab switches detected',
+                'flag_reason' => 'Auto-submitted: '.$this->maxTabSwitches.' tab switches detected',
             ]);
             $this->submit();
         }
@@ -197,7 +222,7 @@ class ExamTaking extends Component
     {
         $deadline = $this->session->started_at->addMinutes($this->exam->duration_minutes);
 
-        return max(0, (int) $deadline->diffInSeconds(now()));
+        return max(0, (int) now()->diffInSeconds($deadline));
     }
 
     public function getCurrentQuestion(): Question
@@ -278,13 +303,29 @@ class ExamTaking extends Component
         }
     }
 
-    public function submit(): RedirectResponse
+    public function submit(): ?RedirectResponse
     {
+        Log::info('[ExamTaking] submit() called', [
+            'session_id' => $this->session->id ?? 'N/A',
+            'isSubmitting' => $this->isSubmitting,
+            'is_submitted' => $this->session->is_submitted ?? 'N/A',
+        ]);
+
+        if (! isset($this->session) || ! $this->session->exists) {
+            Log::warning('[ExamTaking] submit() - session not loaded, returning null');
+
+            return null;
+        }
+
         if ($this->isSubmitting) {
+            Log::info('[ExamTaking] submit() - already submitting, redirect to results');
+
             return $this->redirectRoute('student.results', ['session' => $this->session]);
         }
 
         $this->isSubmitting = true;
+
+        Log::info('[ExamTaking] submit() - marking session as submitted');
 
         $this->session->update([
             'is_submitted' => true,
@@ -292,6 +333,8 @@ class ExamTaking extends Component
         ]);
 
         $this->dispatch('notify', ['message' => 'Exam submitted successfully.', 'type' => 'success']);
+
+        Log::info('[ExamTaking] submit() - redirecting to results');
 
         return $this->redirectRoute('student.results', ['session' => $this->session]);
     }

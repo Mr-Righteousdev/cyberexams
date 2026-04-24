@@ -13,8 +13,9 @@
 | Phase 4 | Anti-Cheat Guards | 8 | 2 days |
 | Phase 5 | Results & Admin | 7 | 3 days |
 | Phase 6 | Polish & QA | 6 | 2 days |
+| Phase 7 | Exam Import/Export | 6 | 2 days |
 
-**Total:** 6 phases, ~16 days
+**Total:** 7 phases, ~18 days
 
 ---
 
@@ -320,24 +321,24 @@ Plans:
 ### Tasks
 
 1. [X] Responsive UI pass:
-   - [X] Test on laptop sizes
-   - [X] Fix layout issues
+    - [X] Test on laptop sizes
+    - [X] Fix layout issues
 2. [X] Error states:
-   - [X] Exam expired
-   - [X] Already submitted
-   - [X] Network blocked
-   - [X] Session not found
+    - [X] Exam expired
+    - [X] Already submitted
+    - [X] Network blocked
+    - [X] Session not found
 3. [X] Empty states:
-   - [X] No exams published
-   - [X] No results
+    - [X] No exams published
+    - [X] No results
 4. [X] Flash messages for all admin actions
 5. [X] Loading states (wire:loading)
 6. [X] Security QA:
-   - [X] Student cannot access admin routes
-   - [X] Duplicate exam start blocked
-   - [X] Auto-submit fires reliably
-   - [X] IP binding works
-   - [X] Network guard blocks external
+    - [X] Student cannot access admin routes
+    - [X] Duplicate exam start blocked
+    - [X] Auto-submit fires reliably
+    - [X] IP binding works
+    - [X] Network guard blocks external
 
 ### Requirements Covered
 
@@ -356,6 +357,50 @@ Plans:
 - [ ] 06-01-PLAN.md — Error pages, empty-state component, responsive layout audit
 - [ ] 06-02-PLAN.md — Flash messages + loading states for all admin CRUD actions
 - [ ] 06-03-PLAN.md — Security smoke tests (HTTP + Playwright) and security hook verification
+
+---
+
+## Phase 7 — Exam Import/Export
+
+**Goal:** JSON-based import/export for exam questions with queue-based processing and stats overview
+
+### Requirements Covered
+
+| ID | Requirement |
+|----|------------|
+| IMP-01 | Admin can view exam stats (attendance, question count) |
+| IMP-02 | Admin can export exam questions to JSON |
+| IMP-03 | Admin can import questions from JSON file |
+| IMP-04 | Import queued with progress feedback |
+| IMP-05 | Failed imports shown with error details |
+| IMP-06 | Admin can download sample JSON template |
+
+### Tasks
+
+1. [X] Exam stats page (`/admin/exams/{id}/stats`):
+    - [X] Question count by type
+    - [X] Student attendance count
+    - [X] Past pass/fail rates
+2. [X] JSON export:
+    - [X] Export endpoint (download all questions as JSON)
+    - [X] Full question structure (options, code blocks, marks)
+3. [X] JSON import:
+    - [X] File upload with JSON validation
+    - [X] ImportQuestionsJob (queued)
+    - [X] Per-question validation and error collection
+    - [X] Failed questions tracked in session/notification
+4. [X] Import result modal:
+    - [X] Stats: total received, success count, fail count
+    - [X] Per-type breakdown
+    - [X] Failed question list with error messages
+5. [X] Sample JSON template download
+6. [X] Database notifications for job completion
+
+**Success Criteria:**
+- [X] Export produces valid JSON with all question data
+- [X] Import processes questions without blocking UI
+- [X] Failed imports displayed in modal with actionable errors
+- [X] Sample template available for download
 
 ---
 

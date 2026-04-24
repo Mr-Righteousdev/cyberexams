@@ -1,8 +1,4 @@
-@extends('components.layouts.student')
-@section('title', 'Results - ' . $session->exam->title)
-
-@section('content')
-    <div class="mx-auto max-w-4xl space-y-8">
+ <div class="mx-auto max-w-4xl space-y-8">
         <!-- Score Card -->
         <flux:card>
             <div class="flex flex-col items-center gap-6 text-center">
@@ -29,10 +25,10 @@
                             <flux:badge variant="danger" class="text-lg px-4 py-2">FAILED</flux:badge>
                         @endif
                         <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-                            @if($session->exam->passing_marks)
-                                Passing: {{ $session->exam->passing_marks }} marks ({{ round($session->exam->passing_marks / $session->total_marks * 100) }}%)
+                            @if($session->exam->passing_percentage)
+                                Passing: {{ $session->exam->passing_percentage }}%
                             @else
-                                No passing threshold set
+                                Passing: 50% (default)
                             @endif
                         </p>
                     </div>
@@ -127,4 +123,3 @@
             </flux:callout>
         @endif
     </div>
-@endsection

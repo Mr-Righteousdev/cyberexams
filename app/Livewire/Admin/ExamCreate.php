@@ -21,7 +21,7 @@ class ExamCreate extends Component
 
     public int $total_marks = 0;
 
-    public ?int $passing_marks = null;
+    public ?int $passing_percentage = null;
 
     public ?string $starts_at = null;
 
@@ -39,7 +39,7 @@ class ExamCreate extends Component
         'instructions' => 'nullable|string',
         'duration_minutes' => 'required|integer|min:1',
         'total_marks' => 'nullable|integer|min:0',
-        'passing_marks' => 'nullable|integer|min:0',
+        'passing_percentage' => 'nullable|integer|min:0|max:100',
         'starts_at' => 'nullable|date',
         'ends_at' => 'nullable|date|after:starts_at',
         'shuffle_questions' => 'boolean',
@@ -56,13 +56,15 @@ class ExamCreate extends Component
             $this->instructions = $exam->instructions ?? '';
             $this->duration_minutes = $exam->duration_minutes;
             $this->total_marks = $exam->total_marks;
-            $this->passing_marks = $exam->passing_marks;
-            $this->starts_at = $exam->starts_at?->format('Y-m-d H:i');
+            $this->passing_percentage = $exam->passing_percentage;
+            $this->starts_at = $exam->starts_at;
             $this->ends_at = $exam->ends_at?->format('Y-m-d H:i');
             $this->shuffle_questions = $exam->shuffle_questions;
             $this->shuffle_options = $exam->shuffle_options;
             $this->is_published = $exam->is_published;
         }
+
+        // dd($this->starts_at);
     }
 
     public function save()
@@ -74,8 +76,7 @@ class ExamCreate extends Component
             'description',
             'instructions',
             'duration_minutes',
-            'total_marks',
-            'passing_marks',
+            'passing_percentage',
             'starts_at',
             'ends_at',
             'shuffle_questions',
@@ -83,8 +84,8 @@ class ExamCreate extends Component
             'is_published',
         ]);
 
-        $data['starts_at'] = $data['starts_at'] ? Carbon::parse($data['starts_at']) : null;
-        $data['ends_at'] = $data['ends_at'] ? Carbon::parse($data['ends_at']) : null;
+        // $data['starts_at'] = $data['starts_at'] ? Carbon::parse($data['starts_at']) : null;
+        // $data['ends_at'] = $data['ends_at'] ? Carbon::parse($data['ends_at']) : null;
 
         if ($this->exam) {
             $this->exam->update($data);

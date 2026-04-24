@@ -36,15 +36,15 @@
                                 <input type="number" id="duration_minutes" wire:model="duration_minutes" min="1" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
                             </div>
 
-                            <div>
+                            {{-- <div>
                                 <label for="total_marks" class="block text-sm font-medium text-gray-700">Total Marks</label>
                                 <input type="number" id="total_marks" wire:model="total_marks" min="0" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                            </div>
+                            </div> --}}
                         </div>
 
                         <div>
-                            <label for="passing_marks" class="block text-sm font-medium text-gray-700">Passing Marks (optional)</label>
-                            <input type="number" id="passing_marks" wire:model="passing_marks" min="0" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" placeholder="Leave empty for 50%">
+                            <label for="passing_percentage" class="block text-sm font-medium text-gray-700">Passing Percentage (optional)</label>
+                            <input type="number" id="passing_percentage" wire:model="passing_percentage" min="0" max="100" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" placeholder="e.g. 50 (leave empty for 50%)">
                         </div>
 
                         <div class="grid grid-cols-2 gap-4">

@@ -1,77 +1,93 @@
-@extends('components.layouts.student')
-@section('title', $exam->title)
+<div>
+    <!-- Anti-cheat guard script -->
+    <script>
+    function examGuard() {
+        return {
+            tabCount: {{ $tabSwitchCount }},
+            showWarning: {{ $showTabWarning ? 'true' : 'false' }},
+            lastBlocked: '',
+            
+            init() {
+                this.tabCount = {{ $tabSwitchCount }};
+                this.showWarning = {{ $showTabWarning ? 'true' : 'false' }};
+            },
+            
+            handleKeydown(event) {
+                if (event.ctrlKey && event.key.toLowerCase() === 'u') {
+                    event.preventDefault();
+                    this.showBlocked('Ctrl+U is disabled');
+                    return false;
+                }
+                if (event.ctrlKey && event.key.toLowerCase() === 's') {
+                    event.preventDefault();
+                    this.showBlocked('Ctrl+S is disabled');
+                    return false;
+                }
+                if (event.ctrlKey && event.key.toLowerCase() === 'p') {
+                    event.preventDefault();
+                    this.showBlocked('Ctrl+P is disabled');
+                    return false;
+                }
+                if (event.ctrlKey && event.shiftKey && event.key.toLowerCase() === 'i') {
+                    event.preventDefault();
+                    this.showBlocked('Developer tools are disabled');
+                    return false;
+                }
+                if (event.key === 'F12') {
+                    event.preventDefault();
+                    this.showBlocked('F12 is disabled');
+                    return false;
+                }
+                if (event.key === 'Escape') {
+                    event.preventDefault();
+                }
+            },
+            
+            handleVisibilityChange() {
+                if (document.hidden) {
+                    @this.handleTabSwitch();
+                }
+            },
+            
+            showBlocked(message) {
+                if (message !== this.lastBlocked) {
+                    this.lastBlocked = message;
+                    @this.dispatch('blocked-action', {message: message});
+                }
+            }
+        };
+    }
+    </script>
 
-@push('scripts')
-<script>
-function examGuard() {
-    return {
-        tabCount: {{ $tabSwitchCount }},
-        showWarning: {{ $showTabWarning ? 'true' : 'false' }},
-        lastBlocked: '',
-        
-        init() {
-            this.tabCount = {{ $tabSwitchCount }};
-            this.showWarning = {{ $showTabWarning ? 'true' : 'false' }};
-        },
-        
-        handleKeydown(event) {
-            // Block Ctrl+U (view source)
-            if (event.ctrlKey && event.key.toLowerCase() === 'u') {
-                event.preventDefault();
-                this.showBlocked('Ctrl+U is disabled');
-                return false;
-            }
-            // Block Ctrl+S (save)
-            if (event.ctrlKey && event.key.toLowerCase() === 's') {
-                event.preventDefault();
-                this.showBlocked('Ctrl+S is disabled');
-                return false;
-            }
-            // Block Ctrl+P (print)
-            if (event.ctrlKey && event.key.toLowerCase() === 'p') {
-                event.preventDefault();
-                this.showBlocked('Ctrl+P is disabled');
-                return false;
-            }
-            // Block Ctrl+Shift+I (dev tools)
-            if (event.ctrlKey && event.shiftKey && event.key.toLowerCase() === 'i') {
-                event.preventDefault();
-                this.showBlocked('Developer tools are disabled');
-                return false;
-            }
-            // Block F12
-            if (event.key === 'F12') {
-                event.preventDefault();
-                this.showBlocked('F12 is disabled');
-                return false;
-            }
-            // Block Escape - just prevent (don't close modals accidentally)
-            if (event.key === 'Escape') {
-                event.preventDefault();
-            }
-        },
-        
-        handleVisibilityChange() {
-            if (document.hidden) {
-                // Student left the tab/window
-                @this.handleTabSwitch();
-            }
-        },
-        
-        showBlocked(message) {
-            if (message !== this.lastBlocked) {
-                this.lastBlocked = message;
-                // Use Livewire dispatch for toast
-                @this.dispatch('blocked-action', {message: message});
-            }
-        }
-    };
-}
-</script>
-@endpush
+    <!-- Header -->
+    <div class="sticky top-0 z-10 border-b border-zinc-200 bg-white py-3 dark:bg-zinc-800 dark:border-zinc-700">
+        <div class="mx-auto max-w-4xl flex items-center justify-between px-4">
+            <div class="flex items-center gap-4">
+                <flux:heading level="2" size="md">{{ $exam->title }}</flux:heading>
+                @if($tabSwitchCount > 0)
+                    <span class="rounded bg-amber-100 px-2 py-1 text-xs text-amber-800 dark:bg-amber-900/30 dark:text-amber-400">
+                        {{ $tabSwitchCount }} / {{ $maxTabSwitches }} tabs
+                    </span>
+                @endif
+            </div>
+            <div class="flex items-center gap-4">
+                <div x-data="{ time: {{ $remainingSeconds }} }"
+                     x-init="setInterval(() => { if (time > 0) time--; if (time <= 0) location.reload(); }, 1000)"
+                     class="flex items-center gap-2 rounded-lg bg-zinc-100 px-4 py-2 dark:bg-zinc-700">
+                    <flux:icon name="clock" class="h-5 w-5" />
+                    <span x-text="Math.floor(time / 3600) + ':' + Math.floor((time % 3600) / 60).toString().padStart(2, '0') + ':' + (time % 60).toString().padStart(2, '0')"
+                          class="font-mono text-xl font-bold"
+                          :class="{ 'text-red-600': time < 300 }"></span>
+                </div>
+                <flux:button variant="danger" wire:click="$set('showSubmitModal', true)">
+                    Submit Exam
+                </flux:button>
+            </div>
+        </div>
+    </div>
 
-@section('content')
-    <div class="mx-auto max-w-4xl select-none"
+    <!-- Main Content -->
+    <div class="mx-auto max-w-4xl px-4 py-6 select-none"
          x-data="examGuard()"
          x-init="init()"
          x-on:keydown.window="handleKeydown($event)"
@@ -81,53 +97,22 @@ function examGuard() {
          x-on:cut.window.prevent="$flux.toast({variant: 'warning', text: 'Cut is disabled during exam'})"
          x-on:visibilitychange.window="handleVisibilityChange()"
          x-on:blocked-action.window="$wire.handleBlockedAction($event.detail.message)">
-        <!-- Header -->
-        <div class="sticky top-0 z-10 border-b border-zinc-200 bg-white py-3 dark:bg-zinc-800 dark:border-zinc-700">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center gap-4">
-                    <flux:heading level="2" size="md">{{ $exam->title }}</flux:heading>
-                    <!-- Tab switch indicator -->
-                    @if($tabSwitchCount > 0)
-                        <span class="rounded bg-amber-100 px-2 py-1 text-xs text-amber-800 dark:bg-amber-900/30 dark:text-amber-400">
-                            {{ $tabSwitchCount }} / {{ $maxTabSwitches }} tabs
-                        </span>
-                    @endif
-                </div>
-                <div class="flex items-center gap-4">
-                    <!-- Timer -->
-                    <div x-data="{ time: {{ $remainingSeconds }} }"
-                         x-init="setInterval(() => { if (time > 0) time--; if (time <= 0) location.reload(); }, 1000)"
-                         class="flex items-center gap-2 rounded-lg bg-zinc-100 px-4 py-2 dark:bg-zinc-700">
-                        <flux:icon name="clock" class="h-5 w-5" />
-                        <span x-text="Math.floor(time / 3600) + ':' + Math.floor((time % 3600) / 60).toString().padStart(2, '0') + ':' + (time % 60).toString().padStart(2, '0')"
-                              class="font-mono text-xl font-bold"
-                              :class="{ 'text-red-600': time < 300 }"></span>
-                    </div>
-
-                    <flux:button variant="danger" wire:click="$set('showSubmitModal', true)">
-                        Submit Exam
-                    </flux:button>
-                </div>
-            </div>
-        </div>
 
         <!-- Question Navigation Pills -->
         <div class="mt-4 flex flex-wrap items-center gap-2">
             <span class="text-sm text-zinc-500 dark:text-zinc-400">
-                {{ $answeredCount = $this->getAnsweredCount() }} of {{ $questions->count() }} answered
+                {{ $this->getAnsweredCount() }} of {{ $questions->count() }} answered
             </span>
             @foreach($questions as $index => $question)
                 @php($isAnswered = $this->isAnswered($question->id))
                 @php($isCurrent = $index === $currentIndex)
                 @php($isFlagged = $this->isFlagged($question->id))
                 <button wire:click="goToQuestion({{ $index }})"
-                        class="flex h-10 w-10 items-center justify-center rounded-full text-sm font-medium transition-all"
-                        :class="{
-                            'ring-2 ring-indigo-600 ring-offset-2 dark:ring-offset-zinc-800': {{ $isCurrent ? 'true' : 'false' }},
-                            'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400': {{ $isAnswered ? 'true' : 'false' }} && !{{ $isCurrent ? 'true' : 'false' }},
-                            'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400': {{ $isFlagged ? 'true' : 'false' }},
-                            'bg-zinc-100 text-zinc-600 dark:bg-zinc-700 dark:text-zinc-400': !{{ $isAnswered ? 'true' : 'false' }} && !{{ $isCurrent ? 'true' : 'false' }} && !{{ $isFlagged ? 'true' : 'false' }}
-                ">
+                        class="flex h-10 w-10 items-center justify-center rounded-full text-sm font-medium transition-all
+                        {{ $isCurrent ? 'ring-2 ring-indigo-600 ring-offset-2 dark:ring-offset-zinc-800' : '' }}
+                        {{ $isAnswered && !$isCurrent ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : '' }}
+                        {{ $isFlagged ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400' : '' }}
+                        {{ !$isAnswered && !$isCurrent && !$isFlagged ? 'bg-zinc-100 text-zinc-600 dark:bg-zinc-700 dark:text-zinc-400' : '' }}">
                     {{ $index + 1 }}
                 </button>
             @endforeach
@@ -135,26 +120,20 @@ function examGuard() {
 
         <!-- Question Card -->
         @php($currentQuestion = $this->getCurrentQuestion())
-        @php($currentAnswer = $answers[$currentQuestion->id] ?? ['selected_option_id' => null, 'text_answer' => null]))
+        @php($currentAnswer = $answers[$currentQuestion->id] ?? ['selected_option_id' => null, 'text_answer' => null])
         <flux:card class="mt-6">
             <div class="flex flex-col gap-6">
-                <!-- Question Header -->
-                <div>
-                    <div class="flex items-center justify-between">
-                        <flux:heading level="3" size="lg">
-                            Question {{ $currentIndex + 1 }} of {{ $questions->count() }}
-                        </flux:heading>
-                        <flux:badge>
-                            {{ $currentQuestion->marks }} {{ $currentQuestion->marks == 1 ? 'mark' : 'marks' }}
-                        </flux:badge>
-                    </div>
-                    <flux:button variant="ghost" size="xs" wire:click="toggleFlag({{ $currentQuestion->id }})" class="mt-2">
-                        <flux:icon name="flag" :variant="$this->isFlagged($currentQuestion->id) ? 'solid' : 'outline'" class="mr-1 h-4 w-4" />
-                        {{ $this->isFlagged($currentQuestion->id) ? 'Flagged' : 'Flag for review' }}
-                    </flux:button>
+                <div class="flex items-center justify-between">
+                    <flux:heading level="3" size="lg">
+                        Question {{ $currentIndex + 1 }} of {{ $questions->count() }}
+                    </flux:heading>
+                    <flux:badge>{{ $currentQuestion->marks }} {{ $currentQuestion->marks == 1 ? 'mark' : 'marks' }}</flux:badge>
                 </div>
+                <flux:button variant="ghost" size="xs" wire:click="toggleFlag({{ $currentQuestion->id }})">
+                    <flux:icon name="flag" :variant="$this->isFlagged($currentQuestion->id) ? 'solid' : 'outline'" class="mr-1 h-4 w-4" />
+                    {{ $this->isFlagged($currentQuestion->id) ? 'Flagged' : 'Flag for review' }}
+                </flux:button>
 
-                <!-- Question Text -->
                 <div class="prose dark:prose-invert max-w-none">
                     <p class="text-lg">{{ $currentQuestion->question_text }}</p>
                     @if($currentQuestion->code_block)
@@ -162,7 +141,6 @@ function examGuard() {
                     @endif
                 </div>
 
-                <!-- Answer Section -->
                 <div>
                     @switch($currentQuestion->type)
                         @case('mcq')
@@ -180,51 +158,34 @@ function examGuard() {
                                 @endforeach
                             </div>
                             @break
-
                         @case('true_false')
                             <div class="flex gap-4">
                                 <flux:button variant="{{ $currentAnswer['selected_option_id'] == 1 ? 'primary' : 'ghost' }}"
                                            wire:click="saveAnswer({{ $currentQuestion->id }}, 1)"
-                                           class="flex-1 py-4 text-lg">
-                                    True
-                                </flux:button>
+                                           class="flex-1 py-4 text-lg">True</flux:button>
                                 <flux:button variant="{{ $currentAnswer['selected_option_id'] == 0 ? 'primary' : 'ghost' }}"
                                            wire:click="saveAnswer({{ $currentQuestion->id }}, 0)"
-                                           class="flex-1 py-4 text-lg">
-                                    False
-                                </flux:button>
+                                           class="flex-1 py-4 text-lg">False</flux:button>
                             </div>
                             @break
-
                         @case('short_answer')
-                            <flux:textarea wire:change="saveAnswer({{ $currentQuestion->id }}, $event.target.value)"
-                                       rows="4"
-                                      class="w-full"
-                                      placeholder="Type your answer here...">{{ $currentAnswer['text_answer'] ?? '' }}</flux:textarea>
+                            <flux:textarea wire:change="saveAnswer({{ $currentQuestion->id }}, $event.target.value)" rows="4" class="w-full" placeholder="Type your answer here...">{{ $currentAnswer['text_answer'] ?? '' }}</flux:textarea>
                             @break
-
                         @case('code_snippet')
                             @if($currentQuestion->code_block)
                                 <pre class="mt-2 overflow-x-auto rounded-lg bg-zinc-900 p-4"><code class="language-{{ $currentQuestion->code_language }}">{{ $currentQuestion->code_block }}</code></pre>
                             @endif
-                            <flux:textarea wire:change="saveAnswer({{ $currentQuestion->id }}, $event.target.value)"
-                                       rows="6"
-                                       class="mt-4 w-full"
-                                       placeholder="Write your code here...">{{ $currentAnswer['text_answer'] ?? '' }}</flux:textarea>
+                            <flux:textarea wire:change="saveAnswer({{ $currentQuestion->id }}, $event.target.value)" rows="6" class="mt-4 w-full" placeholder="Write your code here...">{{ $currentAnswer['text_answer'] ?? '' }}</flux:textarea>
                             @break
                     @endswitch
                 </div>
 
-                <!-- Navigation -->
                 <div class="flex items-center justify-between border-t border-zinc-200 pt-6 dark:border-zinc-700">
                     <flux:button variant="ghost" wire:click="navigate('prev')" {{ $currentIndex === 0 ? 'disabled' : '' }}>
-                        <flux:icon name="chevron-left" class="mr-1 h-5 w-5" />
-                        Previous
+                        <flux:icon name="chevron-left" class="mr-1 h-5 w-5" />Previous
                     </flux:button>
-
                     <flux:button variant="ghost" wire:click="navigate('next')" {{ $currentIndex === count($questions) - 1 ? 'disabled' : '' }}>
-                        Next
-                        <flux:icon name="chevron-right" class="ml-1 h-5 w-5" />
+                        Next<flux:icon name="chevron-right" class="ml-1 h-5 w-5" />
                     </flux:button>
                 </div>
             </div>
@@ -238,22 +199,17 @@ function examGuard() {
              x-transition:enter="transition ease-out duration-200"
              x-transition:leave="transition ease-in duration-150"
              class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-            <div @click.outside="$set('showSubmitModal', false)"
-                 class="w-full max-w-md rounded-lg bg-white p-6 dark:bg-zinc-800">
+            <div @click.outside="$set('showSubmitModal', false)" class="w-full max-w-md rounded-lg bg-white p-6 dark:bg-zinc-800">
                 <flux:heading level="3" size="lg">Submit Exam?</flux:heading>
                 <p class="mt-2 text-zinc-600 dark:text-zinc-400">
-                    You have answered {{ $answeredCount }} of {{ $questions->count() }} questions.
-                    @if($questions->count() - $answeredCount > 0)
-                        <br><strong class="text-amber-600">{{ $questions->count() - $answeredCount }} questions unanswered</strong>
+                    You have answered {{ $this->getAnsweredCount() }} of {{ $questions->count() }} questions.
+                    @if($questions->count() - $this->getAnsweredCount() > 0)
+                        <br><strong class="text-amber-600">{{ $questions->count() - $this->getAnsweredCount() }} questions unanswered</strong>
                     @endif
                 </p>
                 <div class="mt-6 flex gap-3">
-                    <flux:button variant="ghost" wire:click="$set('showSubmitModal', false)" class="flex-1">
-                        Cancel
-                    </flux:button>
-                    <flux:button variant="primary" wire:click="submit" class="flex-1">
-                        Confirm Submit
-                    </flux:button>
+                    <flux:button variant="ghost" wire:click="$set('showSubmitModal', false)" class="flex-1">Cancel</flux:button>
+                    <flux:button variant="primary" wire:click="submit" class="flex-1">Confirm Submit</flux:button>
                 </div>
             </div>
         </div>
@@ -268,29 +224,20 @@ function examGuard() {
             <div class="text-center text-white">
                 <flux:icon name="exclamation-triangle" class="mx-auto h-16 w-16" />
                 <flux:heading level="2" size="xl" class="mt-4">Warning: Tab Switch Detected</flux:heading>
-                <p class="mt-2 text-lg">
-                    Do not leave the exam page during the exam.<br>
-                    This is your {{ $tabSwitchCount }} tab switch.
-                </p>
-                <p class="mt-4 text-amber-100">
-                    After {{ $maxTabSwitches }} tab switches, your exam will be automatically submitted.
-                </p>
-                <flux:button variant="primary" wire:click="dismissTabWarning" class="mt-6">
-                    I Understand - Continue Exam
-                </flux:button>
+                <p class="mt-2 text-lg">Do not leave the exam page during the exam.<br>This is your {{ $tabSwitchCount }} tab switch.</p>
+                <p class="mt-4 text-amber-100">After {{ $maxTabSwitches }} tab switches, your exam will be automatically submitted.</p>
+                <flux:button variant="primary" wire:click="dismissTabWarning" class="mt-6">I Understand - Continue Exam</flux:button>
             </div>
         </div>
     @endif
 
     <!-- IP Change Warning -->
     @if($isIpChanged)
-        <div x-data="{ show: true }"
-             x-show="show"
-             class="fixed bottom-4 right-4 z-40 max-w-sm rounded-lg bg-amber-500 p-4 text-white shadow-lg">
+        <div class="fixed bottom-4 right-4 z-40 max-w-sm rounded-lg bg-amber-500 p-4 text-white shadow-lg">
             <div class="flex items-start gap-3">
                 <flux:icon name="exclamation-triangle" class="h-5 w-5 flex-shrink-0" />
                 <p class="text-sm">{{ $ipChangeWarning }}</p>
             </div>
         </div>
     @endif
-@endsection
+</div>

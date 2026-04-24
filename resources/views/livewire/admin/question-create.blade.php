@@ -16,7 +16,7 @@
                     <div class="space-y-6">
                         <div>
                             <label for="type" class="block text-sm font-medium text-gray-700">Question Type</label>
-                            <select id="type" wire:model="type" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                            <select id="type" wire:model.live="type" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
                                 <option value="mcq">Multiple Choice (MCQ)</option>
                                 <option value="true_false">True / False</option>
                                 <option value="short_answer">Short Answer</option>
@@ -35,19 +35,24 @@
                                 @if ($type === 'true_false')
                                     <div class="space-y-2">
                                         @foreach ($options as $index => $option)
-                                            <div class="flex items-center gap-2">
-                                                <input type="radio" name="correct" wire:model="options.{{ $index }}.is_correct" value="1" {{ $option['is_correct'] ? 'checked' : '' }}>
+                                            <label class="flex items-center gap-2 cursor-pointer">
+                                                <input type="radio" name="correct_option" wire:model.live="selectedCorrect" value="{{ $index }}" class="w-4 h-4 text-indigo-600">
                                                 <span class="text-sm">{{ $option['option_text'] }}</span>
-                                            </div>
+                                            </label>
                                         @endforeach
+                                        @error('selectedCorrect')
+                                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                        @enderror
                                     </div>
                                 @else
                                     <div class="space-y-2">
                                         @foreach ($options as $index => $option)
                                             <div class="flex items-center gap-2">
-                                                <input type="radio" name="correct" wire:model="options.{{ $index }}.is_correct" value="1" {{ ($option['is_correct'] ?? false) ? 'checked' : '' }}>
+                                                <input type="checkbox" wire:model="options.{{ $index }}.is_correct" value="1" class="w-4 h-4 text-indigo-600 rounded">
                                                 <input type="text" wire:model="options.{{ $index }}.option_text" placeholder="Option {{ $index + 1 }}" class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                                                <button type="button" wire:click="removeOption({{ $index }})" class="text-red-600 hover:text-red-900">✕</button>
+                                                @if(count($options) > 2)
+                                                    <button type="button" wire:click="removeOption({{ $index }})" class="text-red-600 hover:text-red-900">✕</button>
+                                                @endif
                                             </div>
                                         @endforeach
                                         @if (count($options) < 6)
@@ -89,17 +94,27 @@
                         </div>
                     </div>
 
-                    <div class="mt-6 flex justify-end space-x-3">
+                    <div class="mt-6 flex justify-between">
                         <a href="{{ route('admin.exams.questions.index', $exam) }}" class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
-                            Cancel
+                            ← Back to Questions
                         </a>
-                        <button type="submit"
-                                wire:loading.attr="disabled"
-                                wire:loading.class.add("opacity-50 cursor-not-allowed")
-                                class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed">
-                            <span wire:loading wire:target="save">Adding...</span>
-                            <span wire:target="save">{{ $question ? 'Update' : 'Create' }} Question</span>
-                        </button>
+                        <div class="flex gap-2">
+                            <button type="button"
+                                    wire:click="saveAndContinue"
+                                    wire:loading.attr="disabled"
+                                    wire:loading.class.add("opacity-50 cursor-not-allowed")
+                                    class="px-4 py-2 bg-gray-600 text-white text-sm font-medium rounded-md hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed">
+                                <span wire:loading wire:target="saveAndContinue">Saving...</span>
+                                <span wire:target="saveAndContinue">Save & Add Another</span>
+                            </button>
+                            <button type="submit"
+                                    wire:loading.attr="disabled"
+                                    wire:loading.class.add("opacity-50 cursor-not-allowed")
+                                    class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed">
+                                <span wire:loading wire:target="save">Adding...</span>
+                                <span wire:target="save">{{ $question ? 'Update' : 'Save' }}</span>
+                            </button>
+                        </div>
                     </div>
                 </form>
             </div>

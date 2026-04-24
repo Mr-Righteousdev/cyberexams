@@ -1,7 +1,4 @@
-@extends('components.layouts.student')
-@section('title', 'Student Dashboard')
 
-@section('content')
     <div class="space-y-8">
         <!-- Available Exams -->
         <section>
@@ -29,7 +26,13 @@
                             <div class="flex flex-col gap-3">
                                 <div class="flex items-start justify-between">
                                     <flux:heading level="3" size="md">{{ $exam->title }}</flux:heading>
-                                    <flux:badge variant="success">Available</flux:badge>
+                                    @if($exam->starts_at && $exam->starts_at->isFuture() && $exam->starts_at->isAfter(now()->addHours(2)))
+                                        <flux:badge variant="warning">Starts {{ $exam->starts_at->diffForHumans() }}</flux:badge>
+                                    @elseif($exam->starts_at && $exam->starts_at->isFuture())
+                                        <flux:badge variant="warning">Starting Soon</flux:badge>
+                                    @else
+                                        <flux:badge variant="success">Available</flux:badge>
+                                    @endif
                                 </div>
 
                                 @if($exam->description)
@@ -53,7 +56,7 @@
 
                                 <div class="mt-2">
                                     <flux:button variant="primary" href="{{ route('student.exam.start', $exam) }}" class="w-full">
-                                        Start Exam
+                                        {{ $exam->starts_at && $exam->starts_at->isFuture() && $exam->starts_at->isAfter(now()->addHours(2)) ? 'Exam Starts Soon' : 'Start Exam' }}
                                     </flux:button>
                                 </div>
                             </div>
@@ -83,7 +86,7 @@
                                 </div>
 
                                 <div class="mt-2">
-                                    <flux:button variant="secondary" href="{{ route('student.results', $session) }}" class="w-full">
+                                    <flux:button variant="primary" href="{{ route('student.results', $session) }}" class="w-full">
                                         View Results
                                     </flux:button>
                                 </div>
@@ -94,4 +97,4 @@
             </section>
         @endif
     </div>
-@endsection
+

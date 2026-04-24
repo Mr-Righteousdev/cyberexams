@@ -48,6 +48,7 @@
                                         @endif
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                                        <a href="{{ route('admin.students.edit', $student) }}" class="text-indigo-600 hover:text-indigo-900">Edit</a>
                                         <button wire:click="resetPassword({{ $student->id }})" class="text-blue-600 hover:text-blue-900">Reset Password</button>
                                         <button wire:click="toggleActive({{ $student->id }})" class="text-yellow-600 hover:text-yellow-900">
                                             {{ $student->is_active ? 'Deactivate' : 'Activate' }}

@@ -12,21 +12,61 @@
 
             <flux:sidebar.nav>
                 <flux:sidebar.group :heading="__('Platform')" class="grid">
-                    <flux:sidebar.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
-                        {{ __('Dashboard') }}
-                    </flux:sidebar.item>
+
+                    @if(auth()->user()->isAdmin())
+                        <flux:sidebar.item icon="home" :href="route('admin.dashboard')" :current="request()->routeIs('admin.dashboard')" wire:navigate>
+                            {{ __('Dashboard') }}
+                        </flux:sidebar.item>
+
+                        <flux:sidebar.item icon="document-text" :href="route('admin.exams.index')" :current="request()->routeIs('admin.exams.*')" wire:navigate>
+                            {{ __('Exams') }}
+                        </flux:sidebar.item>
+
+                        <flux:sidebar.item icon="users" :href="route('admin.students.index')" :current="request()->routeIs('admin.students.*')" wire:navigate>
+                            {{ __('Students') }}
+                        </flux:sidebar.item>
+
+                        <flux:sidebar.item icon="chart-bar" :href="route('admin.monitor')" :current="request()->routeIs('admin.monitor')" wire:navigate>
+                            {{ __('Live Monitor') }}
+                        </flux:sidebar.item>
+
+                        <flux:sidebar.item icon="flag" :href="route('admin.flagged-sessions')" :current="request()->routeIs('admin.flagged-sessions')" wire:navigate>
+                            {{ __('Flagged Sessions') }}
+                        </flux:sidebar.item>
+
+                        <flux:sidebar.item icon="pencil-square" :href="route('admin.grading-queue')" :current="request()->routeIs('admin.grading-queue')" wire:navigate>
+                            {{ __('Grading Queue') }}
+                        </flux:sidebar.item>
+                    @else
+                        <flux:sidebar.item icon="home" :href="route('student.dashboard')" :current="request()->routeIs('student.dashboard')" wire:navigate>
+                            {{ __('Dashboard') }}
+                        </flux:sidebar.item>
+
+                        <flux:sidebar.item icon="academic-cap" :href="route('student.dashboard')" :current="request()->routeIs('student.dashboard')" wire:navigate>
+                            {{ __('Available Exams') }}
+                        </flux:sidebar.item>
+                    @endif
+
                 </flux:sidebar.group>
             </flux:sidebar.nav>
 
             <flux:spacer />
 
             <flux:sidebar.nav>
-                <flux:sidebar.item icon="folder-git-2" href="https://github.com/laravel/livewire-starter-kit" target="_blank">
-                    {{ __('Repository') }}
-                </flux:sidebar.item>
+                @if(auth()->user()->isAdmin())
+                    @php($unreadCount = auth()->user()->unreadNotifications()->count())
+                    <flux:sidebar.item icon="bell" :href="route('admin.notifications')" :current="request()->routeIs('admin.notifications')" wire:navigate>
+                        {{ __('Notifications') }}
+                        @if($unreadCount > 0)
+                            <flux:badge size="sm" color="red" class="ml-auto">{{ $unreadCount }}</flux:badge>
+                        @endif
+                    </flux:sidebar.item>
+                @endif
+            </flux:sidebar.nav>
 
-                <flux:sidebar.item icon="book-open-text" href="https://laravel.com/docs/starter-kits#livewire" target="_blank">
-                    {{ __('Documentation') }}
+            <flux:sidebar.nav>
+                <flux:sidebar.item icon="cog" :href="route('profile.edit')" :current="request()->routeIs('profile.edit')" wire:navigate>
+                    {{ __('Settings') }}
                 </flux:sidebar.item>
             </flux:sidebar.nav>
 
@@ -89,6 +129,9 @@
         </flux:header>
 
         {{ $slot }}
+        @stack('scripts')
+
+        <livewire:import-result-modal />
 
         @persist('toast')
             <flux:toast.group>

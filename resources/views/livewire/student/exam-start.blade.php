@@ -1,8 +1,4 @@
-@extends('components.layouts.student')
-@section('title', 'Start ' . $exam->title)
-
-@section('content')
-    <div class="mx-auto max-w-2xl">
+<div class="mx-auto max-w-2xl">
         <flux:card>
             <div class="flex flex-col gap-6">
                 <div>
@@ -11,6 +7,18 @@
                         <p class="mt-2 text-zinc-600 dark:text-zinc-400">{{ $exam->description }}</p>
                     @endif
                 </div>
+
+                @if($exam->starts_at && $exam->starts_at->isFuture() && $exam->starts_at->isAfter(now()->addHours(2)))
+                    <flux:callout variant="warning" class="mt-4">
+                        This exam will be available at <strong>{{ $exam->starts_at->format('M d, Y H:i') }}</strong>.
+                        You will be able to start it 2 hours before that time.
+                    </flux:callout>
+                @elseif($exam->starts_at && $exam->starts_at->isFuture())
+                    <flux:callout variant="info" class="mt-4">
+                        This exam is scheduled for <strong>{{ $exam->starts_at->format('M d, Y H:i') }}</strong>.
+                        Once you start, you have {{ $exam->duration_minutes }} minutes to complete it.
+                    </flux:callout>
+                @endif
 
                 <flux:separator />
 
@@ -29,8 +37,8 @@
                         <p class="text-lg font-semibold text-zinc-900 dark:text-white">{{ $exam->total_marks }}</p>
                     </div>
                     <div>
-                        <p class="text-sm text-zinc-500 dark:text-zinc-500">Passing Marks</p>
-                        <p class="text-lg font-semibold text-zinc-900 dark:text-white">{{ $exam->passing_marks ?? 'Not set' }}</p>
+                        <p class="text-sm text-zinc-500 dark:text-zinc-500">Passing %</p>
+                        <p class="text-lg font-semibold text-zinc-900 dark:text-white">{{ $exam->passing_percentage ?? 50 }}%</p>
                     </div>
                 </div>
 
@@ -58,4 +66,4 @@
             </div>
         </flux:card>
     </div>
-@endsection
+

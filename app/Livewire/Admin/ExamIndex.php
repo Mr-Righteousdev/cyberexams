@@ -11,6 +11,8 @@ class ExamIndex extends Component
 {
     use WithPagination;
 
+    public string $viewMode = 'cards';
+
     public function render()
     {
         $exams = Exam::latest()->paginate(10);

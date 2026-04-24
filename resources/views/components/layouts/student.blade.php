@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ $title ?? 'ExamShield - Student' }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @livewireStyles
+    @fluxStyles
 </head>
 <body class="bg-zinc-50 dark:bg-zinc-900">
     <div class="min-h-screen">
@@ -36,5 +38,6 @@
     </div>
 
     @livewireScripts
+    @fluxScripts
 </body>
 </html>

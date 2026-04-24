@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\EatDatetime;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -13,7 +14,7 @@ class Exam extends Model
         'instructions',
         'duration_minutes',
         'total_marks',
-        'passing_marks',
+        'passing_percentage',
         'starts_at',
         'ends_at',
         'shuffle_questions',
@@ -25,8 +26,8 @@ class Exam extends Model
     protected function casts(): array
     {
         return [
-            'starts_at' => 'datetime',
-            'ends_at' => 'datetime',
+            'starts_at' => EatDatetime::class,
+            'ends_at' => EatDatetime::class,
             'shuffle_questions' => 'boolean',
             'shuffle_options' => 'boolean',
             'is_published' => 'boolean',

@@ -5,6 +5,7 @@ namespace App\Livewire\Student;
 use App\Models\Exam;
 use App\Models\ExamSession;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Log;
 use Livewire\Component;
 
 class ExamStart extends Component
@@ -15,43 +16,104 @@ class ExamStart extends Component
     {
         $user = auth()->user();
 
-        // Check if user already has a submitted session for this exam
-        $existingSession = ExamSession::where('exam_id', $exam->id)
-            ->where('user_id', $user->id)
-            ->where('is_submitted', true)
-            ->first();
+        Log::info('[ExamStart] mount() called', [
+            'user_id' => $user?->id,
+            'user_name' => $user?->name,
+            'exam_id' => $exam->id,
+            'exam_title' => $exam->title,
+            'exam_starts_at' => $exam->starts_at?->format('Y-m-d H:i:s'),
+            'now' => now()->format('Y-m-d H:i:s'),
+        ]);
 
-        if ($existingSession) {
-            $this->redirectRoute('student.results', ['session' => $existingSession]);
+        $examNotYetAvailable = $exam->starts_at && $exam->starts_at->isAfter(now());
+
+        Log::info('[ExamStart] Check 1: exam not yet available?', [
+            'starts_at' => $exam->starts_at,
+            'isAfter(now)' => $exam->starts_at ? $exam->starts_at->isAfter(now()) : 'N/A (null)',
+            'result' => $examNotYetAvailable,
+        ]);
+
+        if ($examNotYetAvailable) {
+            Log::info('[ExamStart] REDIRECT to dashboard - exam not yet available');
+            $this->redirectRoute('student.dashboard');
 
             return;
         }
 
-        // Load exam with question count
+        $existingSubmittedSession = ExamSession::where('exam_id', $exam->id)
+            ->where('user_id', $user->id)
+            ->where('is_submitted', true)
+            ->first();
+
+        Log::info('[ExamStart] Check 2: existing submitted session?', [
+            'found' => $existingSubmittedSession ? true : false,
+            'session_id' => $existingSubmittedSession?->id,
+            'submitted_at' => $existingSubmittedSession?->submitted_at?->format('Y-m-d H:i:s'),
+        ]);
+
+        if ($existingSubmittedSession) {
+            Log::info('[ExamStart] REDIRECT to results - already submitted');
+            $this->redirectRoute('student.results', ['session' => $existingSubmittedSession]);
+
+            return;
+        }
+
         $this->exam = $exam->loadCount('questions');
+
+        Log::info('[ExamStart] mount() completed successfully - showing start page', [
+            'exam_id' => $this->exam->id,
+            'questions_count' => $this->exam->questions_count,
+        ]);
     }
 
-    public function start(): RedirectResponse
+    public function start(): ?RedirectResponse
     {
         $user = auth()->user();
 
-        // Check for existing in-progress session
-        $existingSession = ExamSession::where('exam_id', $this->exam->id)
+        Log::info('[ExamStart] start() called', [
+            'user_id' => $user?->id,
+            'exam_id' => $this->exam->id ?? 'N/A',
+        ]);
+
+        if (! $user) {
+            Log::warning('[ExamStart] start() - no user, returning null');
+
+            return null;
+        }
+
+        if (! isset($this->exam) || ! $this->exam->exists) {
+            Log::warning('[ExamStart] start() - exam not loaded, returning null');
+
+            return null;
+        }
+
+        $existingInProgressSession = ExamSession::where('exam_id', $this->exam->id)
             ->where('user_id', $user->id)
             ->where('is_submitted', false)
             ->first();
 
-        if ($existingSession) {
-            return $this->redirectRoute('student.exam.session', ['session' => $existingSession]);
+        Log::info('[ExamStart] Check 3: existing in-progress session?', [
+            'found' => $existingInProgressSession ? true : false,
+            'session_id' => $existingInProgressSession?->id,
+        ]);
+
+        if ($existingInProgressSession) {
+            Log::info('[ExamStart] REDIRECT to existing session');
+
+            return $this->redirectRoute('student.exam.session', ['session' => $existingInProgressSession]);
         }
 
-        // Create new session
         $session = ExamSession::create([
             'exam_id' => $this->exam->id,
             'user_id' => $user->id,
             'ip_address' => request()->ip(),
             'started_at' => now(),
             'is_submitted' => false,
+        ]);
+
+        Log::info('[ExamStart] Created new session, REDIRECT to exam taking', [
+            'session_id' => $session->id,
+            'exam_id' => $this->exam->id,
         ]);
 
         return $this->redirectRoute('student.exam.session', ['session' => $session]);

@@ -14,30 +14,45 @@ class Dashboard extends Component
 
     public function mount(): void
     {
-        $user = auth()->user();
+        try {
+            $user = auth()->user();
 
-        // Get exam IDs the user has already attempted
-        $attemptedExamIds = $user->examSessions()->pluck('exam_id');
+            if (! $user) {
+                $this->exams = collect();
+                $this->attempted = collect();
 
-        // Get available published exams (not yet attempted)
-        $this->exams = Exam::where('is_published', true)
-            ->whereNotIn('id', $attemptedExamIds)
-            ->where(function ($q) {
-                $q->whereNull('starts_at')
-                    ->orWhere('starts_at', '<=', now());
-            })
-            ->where(function ($q) {
-                $q->whereNull('ends_at')
-                    ->orWhere('ends_at', '>=', now());
-            })
-            ->withCount('questions')
-            ->get();
+                return;
+            }
 
-        // Get already attempted exams (for results display)
-        $this->attempted = $user->examSessions()
-            ->with('exam')
-            ->where('is_submitted', true)
-            ->get();
+            // dd(now());
+
+            $attemptedExamIds = $user->examSessions()->pluck('exam_id');
+
+            $this->exams = Exam::where('is_published', true)
+                ->whereNotIn('id', $attemptedExamIds)
+                ->where(function ($q) {
+                    $q->where(function ($inner) {
+                        $inner->where('starts_at', '>=', now())
+                            ->where('starts_at', '<=', now()->addHours(2));
+                    })
+                        ->orWhereNull('starts_at');
+                })
+                ->where(function ($q) {
+                    $q->whereNull('starts_at') // open anytime
+                        ->orWhere('starts_at', '<=', now()); // has started (now or in the past)
+                })
+                ->withCount('questions')
+                ->get();
+
+            $this->attempted = $user->examSessions()
+                ->with('exam')
+                ->where('is_submitted', true)
+                ->get();
+        } catch (\Throwable $e) {
+            $this->exams = collect();
+            $this->attempted = collect();
+            report($e);
+        }
     }
 
     public function render()
