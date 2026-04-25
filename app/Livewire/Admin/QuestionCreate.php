@@ -138,33 +138,62 @@ class QuestionCreate extends Component
 
         $this->validate();
 
-        $question = Question::create([
-            'exam_id' => $this->exam->id,
-            'type' => $this->type,
-            'question_text' => $this->question_text,
-            'code_block' => $this->code_block ?: null,
-            'code_language' => $this->code_language ?: null,
-            'marks' => $this->marks,
-            'explanation' => $this->explanation ?: null,
-            'order' => $this->exam->questions()->max('order') + 1,
-        ]);
+        if ($this->question) {
+            $this->question->update([
+                'type' => $this->type,
+                'question_text' => $this->question_text,
+                'code_block' => $this->code_block ?: null,
+                'code_language' => $this->code_language ?: null,
+                'marks' => $this->marks,
+                'explanation' => $this->explanation ?: null,
+            ]);
 
-        if (in_array($this->type, ['mcq', 'true_false', 'code_snippet'])) {
-            foreach ($this->options as $index => $optionData) {
-                $isCorrect = $this->type === 'true_false'
-                    ? ($index === $this->selectedCorrect)
-                    : ($optionData['is_correct'] ?? false);
+            $this->question->options()->delete();
 
-                Option::create([
-                    'question_id' => $question->id,
-                    'option_text' => $optionData['option_text'],
-                    'is_correct' => $isCorrect,
-                    'order' => $index,
-                ]);
+            if (in_array($this->type, ['mcq', 'true_false', 'code_snippet'])) {
+                foreach ($this->options as $index => $optionData) {
+                    $isCorrect = $this->type === 'true_false'
+                        ? ($index === $this->selectedCorrect)
+                        : ($optionData['is_correct'] ?? false);
+
+                    $this->question->options()->create([
+                        'option_text' => $optionData['option_text'],
+                        'is_correct' => $isCorrect,
+                        'order' => $index,
+                    ]);
+                }
             }
-        }
 
-        Flux::toast(variant: 'success', text: 'Question created.');
+            Flux::toast(variant: 'success', text: 'Question updated.');
+        } else {
+            $question = Question::create([
+                'exam_id' => $this->exam->id,
+                'type' => $this->type,
+                'question_text' => $this->question_text,
+                'code_block' => $this->code_block ?: null,
+                'code_language' => $this->code_language ?: null,
+                'marks' => $this->marks,
+                'explanation' => $this->explanation ?: null,
+                'order' => $this->exam->questions()->max('order') + 1,
+            ]);
+
+            if (in_array($this->type, ['mcq', 'true_false', 'code_snippet'])) {
+                foreach ($this->options as $index => $optionData) {
+                    $isCorrect = $this->type === 'true_false'
+                        ? ($index === $this->selectedCorrect)
+                        : ($optionData['is_correct'] ?? false);
+
+                    Option::create([
+                        'question_id' => $question->id,
+                        'option_text' => $optionData['option_text'],
+                        'is_correct' => $isCorrect,
+                        'order' => $index,
+                    ]);
+                }
+            }
+
+            Flux::toast(variant: 'success', text: 'Question created.');
+        }
 
         return redirect()->route('admin.exams.questions.index', $this->exam);
     }
@@ -181,6 +210,37 @@ class QuestionCreate extends Component
         }
 
         $this->validate();
+
+        if ($this->question) {
+            $this->question->update([
+                'type' => $this->type,
+                'question_text' => $this->question_text,
+                'code_block' => $this->code_block ?: null,
+                'code_language' => $this->code_language ?: null,
+                'marks' => $this->marks,
+                'explanation' => $this->explanation ?: null,
+            ]);
+
+            $this->question->options()->delete();
+
+            if (in_array($this->type, ['mcq', 'true_false', 'code_snippet'])) {
+                foreach ($this->options as $index => $optionData) {
+                    $isCorrect = $this->type === 'true_false'
+                        ? ($index === $this->selectedCorrect)
+                        : ($optionData['is_correct'] ?? false);
+
+                    $this->question->options()->create([
+                        'option_text' => $optionData['option_text'],
+                        'is_correct' => $isCorrect,
+                        'order' => $index,
+                    ]);
+                }
+            }
+
+            Flux::toast(variant: 'success', text: 'Question updated.');
+
+            return redirect()->route('admin.exams.questions.index', $this->exam);
+        }
 
         $question = Question::create([
             'exam_id' => $this->exam->id,

@@ -3,7 +3,6 @@
 namespace App\Livewire\Admin;
 
 use App\Models\Exam;
-use Carbon\Carbon;
 use Flux\Flux;
 use Livewire\Component;
 
@@ -20,6 +19,8 @@ class ExamCreate extends Component
     public int $duration_minutes = 60;
 
     public int $total_marks = 0;
+
+    public ?int $total_marks_target = null;
 
     public ?int $passing_percentage = null;
 
@@ -39,6 +40,7 @@ class ExamCreate extends Component
         'instructions' => 'nullable|string',
         'duration_minutes' => 'required|integer|min:1',
         'total_marks' => 'nullable|integer|min:0',
+        'total_marks_target' => 'nullable|integer|min:1',
         'passing_percentage' => 'nullable|integer|min:0|max:100',
         'starts_at' => 'nullable|date',
         'ends_at' => 'nullable|date|after:starts_at',
@@ -56,6 +58,7 @@ class ExamCreate extends Component
             $this->instructions = $exam->instructions ?? '';
             $this->duration_minutes = $exam->duration_minutes;
             $this->total_marks = $exam->total_marks;
+            $this->total_marks_target = $exam->total_marks_target;
             $this->passing_percentage = $exam->passing_percentage;
             $this->starts_at = $exam->starts_at;
             $this->ends_at = $exam->ends_at?->format('Y-m-d H:i');
@@ -71,6 +74,18 @@ class ExamCreate extends Component
     {
         $this->validate();
 
+        if ($this->is_published && $this->exam) {
+            $check = $this->exam->canBePublished();
+            if (! $check['can_publish']) {
+                Flux::toast(
+                    variant: 'danger',
+                    text: "Cannot publish: Question pool has {$check['pool_marks']} marks but target is {$check['target_marks']} marks. Add more questions."
+                );
+
+                return;
+            }
+        }
+
         $data = $this->only([
             'title',
             'description',
@@ -84,8 +99,8 @@ class ExamCreate extends Component
             'is_published',
         ]);
 
-        // $data['starts_at'] = $data['starts_at'] ? Carbon::parse($data['starts_at']) : null;
-        // $data['ends_at'] = $data['ends_at'] ? Carbon::parse($data['ends_at']) : null;
+        $data['total_marks'] = $this->total_marks;
+        $data['total_marks_target'] = $this->total_marks_target;
 
         if ($this->exam) {
             $this->exam->update($data);

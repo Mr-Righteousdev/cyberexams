@@ -6,12 +6,12 @@
             tabCount: {{ $tabSwitchCount }},
             showWarning: {{ $showTabWarning ? 'true' : 'false' }},
             lastBlocked: '',
-            
+
             init() {
                 this.tabCount = {{ $tabSwitchCount }};
                 this.showWarning = {{ $showTabWarning ? 'true' : 'false' }};
             },
-            
+
             handleKeydown(event) {
                 if (event.ctrlKey && event.key.toLowerCase() === 'u') {
                     event.preventDefault();
@@ -42,13 +42,13 @@
                     event.preventDefault();
                 }
             },
-            
+
             handleVisibilityChange() {
                 if (document.hidden) {
                     @this.handleTabSwitch();
                 }
             },
-            
+
             showBlocked(message) {
                 if (message !== this.lastBlocked) {
                     this.lastBlocked = message;
@@ -146,26 +146,27 @@
                         @case('mcq')
                             <div class="space-y-3">
                                 @foreach($currentQuestion->options as $option)
-                                    <label class="flex cursor-pointer items-center gap-3 rounded-lg border border-zinc-200 p-4 hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-800 {{ $currentAnswer['selected_option_id'] == $option->id ? 'border-indigo-600 bg-indigo-50 dark:border-indigo-500 dark:bg-indigo-900/20' : '' }}">
-                                        <input type="radio"
-                                               name="answer_{{ $currentQuestion->id }}"
+                                    @php($isChecked = $this->isOptionSelected($currentQuestion->id, $option->id))
+                                    <label class="flex cursor-pointer items-center gap-3 rounded-lg border border-zinc-200 p-4 hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-800 {{ $isChecked ? 'border-indigo-600 bg-indigo-50 dark:border-indigo-500 dark:bg-indigo-900/20' : '' }}">
+                                        <input type="checkbox"
                                                value="{{ $option->id }}"
-                                               {{ $currentAnswer['selected_option_id'] == $option->id ? 'checked' : '' }}
-                                               wire:change="saveAnswer({{ $currentQuestion->id }}, $event.target.value)"
-                                               class="h-5 w-5 text-indigo-600">
+                                               {{ $isChecked ? 'checked' : '' }}
+                                               wire:click="toggleOption({{ $currentQuestion->id }}, {{ $option->id }})"
+                                               class="h-5 w-5 rounded border-zinc-300 text-indigo-600 focus:ring-indigo-600">
                                         <span class="flex-1">{{ $option->option_text }}</span>
                                     </label>
                                 @endforeach
                             </div>
                             @break
                         @case('true_false')
+                            @php($tfOptions = $currentQuestion->options->sortBy('order')->values())
                             <div class="flex gap-4">
-                                <flux:button variant="{{ $currentAnswer['selected_option_id'] == 1 ? 'primary' : 'ghost' }}"
-                                           wire:click="saveAnswer({{ $currentQuestion->id }}, 1)"
-                                           class="flex-1 py-4 text-lg">True</flux:button>
-                                <flux:button variant="{{ $currentAnswer['selected_option_id'] == 0 ? 'primary' : 'ghost' }}"
-                                           wire:click="saveAnswer({{ $currentQuestion->id }}, 0)"
-                                           class="flex-1 py-4 text-lg">False</flux:button>
+                                <flux:button variant="{{ in_array($tfOptions[0]->id ?? 0, $currentAnswer['selected_options'] ?? [$currentAnswer['selected_option_id']]) ? 'primary' : 'ghost' }}"
+                                           wire:click="saveAnswer({{ $currentQuestion->id }}, {{ $tfOptions[0]->id ?? 0 }})"
+                                           class="flex-1 py-4 text-lg">{{ $tfOptions[0]->option_text ?? 'True' }}</flux:button>
+                                <flux:button variant="{{ in_array($tfOptions[1]->id ?? 0, $currentAnswer['selected_options'] ?? [$currentAnswer['selected_option_id']]) ? 'primary' : 'ghost' }}"
+                                           wire:click="saveAnswer({{ $currentQuestion->id }}, {{ $tfOptions[1]->id ?? 0 }})"
+                                           class="flex-1 py-4 text-lg">{{ $tfOptions[1]->option_text ?? 'False' }}</flux:button>
                             </div>
                             @break
                         @case('short_answer')
@@ -180,14 +181,36 @@
                     @endswitch
                 </div>
 
-                <div class="flex items-center justify-between border-t border-zinc-200 pt-6 dark:border-zinc-700">
+                {{-- <div class="flex items-center justify-between border-t border-zinc-200 pt-6 dark:border-zinc-700">
                     <flux:button variant="ghost" wire:click="navigate('prev')" {{ $currentIndex === 0 ? 'disabled' : '' }}>
                         <flux:icon name="chevron-left" class="mr-1 h-5 w-5" />Previous
                     </flux:button>
                     <flux:button variant="ghost" wire:click="navigate('next')" {{ $currentIndex === count($questions) - 1 ? 'disabled' : '' }}>
                         Next<flux:icon name="chevron-right" class="ml-1 h-5 w-5" />
                     </flux:button>
-                </div>
+                </div> --}}
+
+                <div class="flex items-center justify-between border-t border-zinc-200 pt-6 dark:border-zinc-700">
+
+    <flux:button
+        variant="ghost"
+        wire:click="navigate('prev')"
+        :disabled="$currentIndex === 0"
+    >
+        <flux:icon name="chevron-left" class="mr-1 h-5 w-5" />
+        Previous
+    </flux:button>
+
+    <flux:button
+        variant="ghost"
+        wire:click="navigate('next')"
+        :disabled="$currentIndex === count($questions) - 1"
+    >
+        Next
+        <flux:icon name="chevron-right" class="ml-1 h-5 w-5" />
+    </flux:button>
+
+</div>
             </div>
         </flux:card>
     </div>

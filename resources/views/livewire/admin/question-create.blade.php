@@ -63,12 +63,12 @@
                             </div>
                         @endif
 
-                        @if ($type === 'code_snippet')
-                            <div>
-                                <label for="code_block" class="block text-sm font-medium text-gray-700">Code Block (optional)</label>
-                                <textarea id="code_block" wire:model="code_block" rows="6" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm font-mono" placeholder="// Code to display..."></textarea>
-                            </div>
+                        <div>
+                            <label for="code_block" class="block text-sm font-medium text-gray-700">Code Snippet (optional - shown to student)</label>
+                            <textarea id="code_block" wire:model="code_block" rows="6" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm font-mono" placeholder="// Code to display..."></textarea>
+                        </div>
 
+                        @if ($code_block)
                             <div>
                                 <label for="code_language" class="block text-sm font-medium text-gray-700">Language</label>
                                 <select id="code_language" wire:model="code_language" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">

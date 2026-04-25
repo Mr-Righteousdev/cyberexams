@@ -21,7 +21,12 @@ class Results extends Component
             $session->refresh();
         }
 
-        $this->session = $session->load(['exam', 'answers.question', 'answers.selectedOption']);
+        $this->session = $session->load([
+            'exam',
+            'answers.question',
+            'answers.selectedOption',
+            'answers.question.options',
+        ]);
     }
 
     public function render()

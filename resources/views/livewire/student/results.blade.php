@@ -70,16 +70,26 @@
                             <p class="text-zinc-900 dark:text-zinc-100">{{ $question->question_text }}</p>
 
                             @if($question->code_block)
-                                <pre class="overflow-x-auto rounded-lg bg-zinc-900 p-4 text-sm text-zinc-100"><code>{{ $question->code_block }}</code></pre>
+                                <pre class="mt-4 overflow-x-auto rounded-lg bg-zinc-900 p-4 text-sm text-zinc-100"><code class="language-{{ $question->code_language ?? 'plaintext' }}">{{ $question->code_block }}</code></pre>
                             @endif
 
                             <!-- Student's Answer -->
                             <div class="rounded-lg bg-zinc-50 p-4 dark:bg-zinc-800">
                                 <p class="mb-2 text-sm font-medium text-zinc-500 dark:text-zinc-400">Your Answer:</p>
                                 @if(in_array($question->type, ['mcq', 'true_false']))
-                                    <p class="font-medium text-zinc-900 dark:text-white">
-                                        {{ $answer->selectedOption?->option_text ?? 'Not answered' }}
-                                    </p>
+                                    @php($selectedIds = $answer->selected_options ?? ($answer->selected_option_id ? [$answer->selected_option_id] : []))
+                                    @if(empty($selectedIds))
+                                        <p class="font-medium text-zinc-900 dark:text-white">Not answered</p>
+                                    @else
+                                        <div class="flex flex-wrap gap-2">
+                                            @foreach($selectedIds as $optId)
+                                                @php($opt = $question->options->firstWhere('id', $optId))
+                                                @if($opt)
+                                                    <flux:badge variant="primary">{{ $opt->option_text }}</flux:badge>
+                                                @endif
+                                            @endforeach
+                                        </div>
+                                    @endif
                                 @else
                                     <p class="whitespace-pre-wrap text-zinc-900 dark:text-white">{{ $answer->text_answer ?? 'Not answered' }}</p>
                                 @endif
@@ -87,11 +97,15 @@
 
                             <!-- Correct Answer (for MCQ/TF) -->
                             @if(in_array($question->type, ['mcq', 'true_false']) && !$answer->is_correct)
-                                @php($correctOption = $question->options()->where('is_correct', true)->first())
-                                @if($correctOption)
+                                @php($correctOptions = $question->options->where('is_correct', true))
+                                @if($correctOptions->isNotEmpty())
                                     <div class="rounded-lg bg-green-50 p-4 dark:bg-green-900/20">
                                         <p class="mb-2 text-sm font-medium text-green-700 dark:text-green-400">Correct Answer:</p>
-                                        <p class="font-medium text-green-800 dark:text-green-300">{{ $correctOption->option_text }}</p>
+                                        <div class="flex flex-wrap gap-2">
+                                            @foreach($correctOptions as $opt)
+                                                <flux:badge variant="success">{{ $opt->option_text }}</flux:badge>
+                                            @endforeach
+                                        </div>
                                     </div>
                                 @endif
                             @endif

@@ -77,17 +77,14 @@ class ExamTaking extends Component
             return;
         }
 
-        // Load questions (with shuffle if enabled)
-        $query = $this->exam->questions()->with('options');
-        if ($this->exam->shuffle_questions) {
-            $query->inRandomOrder();
-        } else {
-            $query->orderBy('order');
-        }
-        $this->questions = $query->get();
+        // Load questions using the selection algorithm (greedy random)
+        $this->questions = $this->exam->selectQuestionsForStudent()->load('options');
+        $totalReceived = $this->questions->sum('marks');
+        $this->session->update(['total_received' => $totalReceived]);
 
         Log::info('[ExamTaking] Questions loaded', [
             'count' => $this->questions->count(),
+            'total_received' => $totalReceived,
         ]);
 
         // Compute remaining time (SESS-06)
@@ -109,6 +106,7 @@ class ExamTaking extends Component
         foreach ($session->answers as $answer) {
             $this->answers[$answer->question_id] = [
                 'selected_option_id' => $answer->selected_option_id,
+                'selected_options' => $answer->selected_options ?? [],
                 'text_answer' => $answer->text_answer,
             ];
         }
@@ -230,6 +228,28 @@ class ExamTaking extends Component
         return $this->questions[$this->currentIndex];
     }
 
+    public function toggleOption(int $questionId, int $optionId): void
+    {
+        if ($this->session->is_submitted) {
+            return;
+        }
+
+        $currentOptions = $this->answers[$questionId]['selected_options'] ?? [];
+
+        if (in_array($optionId, $currentOptions)) {
+            $currentOptions = array_values(array_filter($currentOptions, fn ($id) => $id !== $optionId));
+        } else {
+            $currentOptions[] = $optionId;
+        }
+
+        $this->saveAnswer($questionId, $currentOptions);
+    }
+
+    public function isOptionSelected(int $questionId, int $optionId): bool
+    {
+        return in_array($optionId, $this->answers[$questionId]['selected_options'] ?? []);
+    }
+
     public function saveAnswer(int $questionId, mixed $value): void
     {
         if ($this->session->is_submitted) {
@@ -241,8 +261,15 @@ class ExamTaking extends Component
             'question_id' => $questionId,
         ];
 
-        if (is_int($value)) {
+        if (is_array($value)) {
+            // Multiple selected options (checkbox array)
+            $filtered = array_filter($value);
+            $data['selected_option_id'] = empty($filtered) ? null : reset($filtered);
+            $data['selected_options'] = $filtered;
+        } elseif (is_int($value)) {
+            // Single option (T/F or MCQ with single selection)
             $data['selected_option_id'] = $value;
+            $data['selected_options'] = [$value];
         } elseif (is_string($value)) {
             $data['text_answer'] = $value;
         }
@@ -256,11 +283,16 @@ class ExamTaking extends Component
         if (! isset($this->answers[$questionId])) {
             $this->answers[$questionId] = [
                 'selected_option_id' => null,
+                'selected_options' => [],
                 'text_answer' => null,
             ];
         }
 
-        if (is_int($value)) {
+        if (is_array($value)) {
+            $filtered = array_filter($value);
+            $this->answers[$questionId]['selected_options'] = $filtered;
+            $this->answers[$questionId]['selected_option_id'] = empty($filtered) ? null : reset($filtered);
+        } elseif (is_int($value)) {
             $this->answers[$questionId]['selected_option_id'] = $value;
         } elseif (is_string($value)) {
             $this->answers[$questionId]['text_answer'] = $value;
@@ -341,7 +373,10 @@ class ExamTaking extends Component
 
     public function getAnsweredCount(): int
     {
-        return count(array_filter($this->answers, fn ($a) => ! empty($a['selected_option_id']) || ! empty($a['text_answer'])));
+        return count(array_filter($this->answers, fn ($a) => ! empty($a['selected_option_id']) ||
+            ! empty($a['selected_options']) ||
+            ! empty($a['text_answer'])
+        ));
     }
 
     public function isAnswered(int $questionId): bool
@@ -352,7 +387,9 @@ class ExamTaking extends Component
 
         $answer = $this->answers[$questionId];
 
-        return ! empty($answer['selected_option_id']) || ! empty($answer['text_answer']);
+        return ! empty($answer['selected_option_id']) ||
+               ! empty($answer['selected_options']) ||
+               ! empty($answer['text_answer']);
     }
 
     public function render()

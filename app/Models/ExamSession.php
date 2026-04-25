@@ -20,6 +20,7 @@ class ExamSession extends Model
         'tab_switch_count',
         'score',
         'total_marks',
+        'total_received',
         'percentage',
         'passed',
         'flagged_questions',
@@ -35,6 +36,7 @@ class ExamSession extends Model
             'passed' => 'boolean',
             'flagged_questions' => 'array',
             'total_marks' => 'integer',
+            'total_received' => 'integer',
         ];
     }
 

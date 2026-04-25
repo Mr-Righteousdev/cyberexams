@@ -107,7 +107,7 @@
                                         @elseif($isSelected)
                                             <flux:icon name="x-circle" class="w-4 h-4 text-red-600" />
                                         @else
-                                            <flux:icon name="circle" class="w-4 h-4" />
+                                            <flux:icon name="x-circle" class="w-4 h-4" />
                                         @endif
                                     </span>
                                     <span class="{{ $isSelected ? 'font-medium' : '' }}">

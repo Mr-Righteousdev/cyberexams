@@ -11,10 +11,18 @@ class Answer extends Model
         'session_id',
         'question_id',
         'selected_option_id',
+        'selected_options',
         'text_answer',
         'is_correct',
         'marks_awarded',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'selected_options' => 'array',
+        ];
+    }
 
     public function session(): BelongsTo
     {

@@ -4,14 +4,12 @@ namespace App\Services;
 
 use App\Models\Answer;
 use App\Models\ExamSession;
-use App\Models\Question;
 use Illuminate\Database\Eloquent\Collection;
 
 class GradingService
 {
     public static function grade(ExamSession $session): void
     {
-        // Already graded
         if ($session->score !== null) {
             return;
         }
@@ -25,22 +23,56 @@ class GradingService
             $question = $answer->question;
             $totalMarks += $question->marks;
 
-            $correctOption = $question->options()->where('is_correct', true)->first();
+            if (in_array($question->type, ['mcq', 'true_false'])) {
+                $selectedIds = $answer->selected_options
+                    ?? ($answer->selected_option_id ? [$answer->selected_option_id] : []);
 
-            if ($question->type === 'mcq' || $question->type === 'true_false') {
-                $isCorrect = $answer->selected_option_id !== null
-                    && $correctOption !== null
-                    && $answer->selected_option_id === $correctOption->id;
+                $selectedIds = array_filter($selectedIds);
 
-                $answer->update([
-                    'is_correct' => $isCorrect,
-                    'marks_awarded' => $isCorrect ? $question->marks : 0,
-                ]);
+                if (empty($selectedIds)) {
+                    $answer->update([
+                        'is_correct' => false,
+                        'marks_awarded' => 0,
+                    ]);
+                } elseif ($question->type === 'true_false') {
+                    $selectedId = reset($selectedIds);
+                    $selectedOption = $question->options()->find($selectedId);
+                    $selectedText = $selectedOption?->option_text ?? '';
 
-                if ($isCorrect) {
-                    $awardedMarks += $question->marks;
+                    $correctOption = $question->options()->where('is_correct', true)->first();
+                    $correctText = $correctOption?->option_text ?? '';
+
+                    $isCorrect = strtolower(trim($selectedText)) === strtolower(trim($correctText));
+
+                    $answer->update([
+                        'is_correct' => $isCorrect,
+                        'marks_awarded' => $isCorrect ? $question->marks : 0,
+                    ]);
+
+                    if ($isCorrect) {
+                        $awardedMarks += $question->marks;
+                    }
+                } else {
+                    $correctOptionIds = $question->options()
+                        ->where('is_correct', true)
+                        ->pluck('id')
+                        ->toArray();
+
+                    sort($correctOptionIds);
+                    sort($selectedIds);
+
+                    $isCorrect = ! empty($correctOptionIds) && $correctOptionIds === $selectedIds;
+
+                    $answer->update([
+                        'is_correct' => $isCorrect,
+                        'marks_awarded' => $isCorrect ? $question->marks : 0,
+                    ]);
+
+                    if ($isCorrect) {
+                        $awardedMarks += $question->marks;
+                    }
                 }
-            } elseif ($question->type === 'short_answer' || $question->type === 'code_snippet') {
+            } elseif (in_array($question->type, ['short_answer', 'code_snippet'])) {
                 // Leave null — manual grading required
             }
         }
@@ -55,36 +87,28 @@ class GradingService
         $session->update([
             'score' => $awardedMarks,
             'total_marks' => $totalMarks,
+            'total_received' => $totalMarks,
             'percentage' => $percentage,
             'passed' => $passed,
         ]);
     }
 
-    /**
-     * Grade a single manual (short answer / code snippet) question.
-     * Updates the answer's marks_awarded and recalculates session totals.
-     */
     public static function gradeAnswer(Answer $answer, float|string $marks): void
     {
         $marks = is_numeric($marks) ? (float) $marks : 0;
 
-        // Validate: marks cannot exceed question marks
         $question = $answer->question;
         $marks = min($marks, $question->marks);
-        $marks = max($marks, 0); // cannot be negative
+        $marks = max($marks, 0);
 
         $answer->update([
             'marks_awarded' => $marks,
             'is_correct' => $marks >= $question->marks ? true : ($marks > 0 ? null : false),
         ]);
 
-        // Recalculate session totals
         self::recalculateSession($answer->session);
     }
 
-    /**
-     * Recalculate a session's total score after any answer change.
-     */
     public static function recalculateSession(ExamSession $session): void
     {
         $answers = $session->answers()->with('question')->get();
@@ -96,7 +120,6 @@ class GradingService
             $question = $answer->question;
             $totalMarks += $question->marks;
 
-            // Only count if marks_awarded is not null (graded questions)
             if ($answer->marks_awarded !== null) {
                 $awardedMarks += $answer->marks_awarded;
             }
@@ -110,18 +133,20 @@ class GradingService
             $passed = $percentage >= $exam->passing_percentage;
         }
 
-        $session->update([
+        $updateData = [
             'score' => $awardedMarks,
             'total_marks' => $totalMarks,
             'percentage' => $percentage,
             'passed' => $passed,
-        ]);
+        ];
+
+        if ($session->total_received === null) {
+            $updateData['total_received'] = $totalMarks;
+        }
+
+        $session->update($updateData);
     }
 
-    /**
-     * Get all answers requiring manual grading.
-     * Returns: short_answer and code_snippet questions with null marks_awarded.
-     */
     public static function getPendingGrading(): Collection
     {
         return Answer::whereNull('marks_awarded')
@@ -134,9 +159,6 @@ class GradingService
             ->get();
     }
 
-    /**
-     * Check if all answers for a session are graded.
-     */
     public static function isFullyGraded(ExamSession $session): bool
     {
         $pending = $session->answers()
