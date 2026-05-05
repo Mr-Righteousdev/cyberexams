@@ -36,10 +36,14 @@
                                 <input type="number" id="duration_minutes" wire:model="duration_minutes" min="1" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
                             </div>
 
-                            {{-- <div>
-                                <label for="total_marks" class="block text-sm font-medium text-gray-700">Total Marks</label>
-                                <input type="number" id="total_marks" wire:model="total_marks" min="0" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                            </div> --}}
+                            <div>
+                                <label for="total_marks_target" class="block text-sm font-medium text-gray-700">Total marks target</label>
+                                <input type="number" id="total_marks_target" wire:model.defer="total_marks_target" min="0" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" placeholder="Enter target marks (required)">
+                                @error('total_marks_target') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                                <p class="text-sm text-gray-500 mt-1">
+                                    Pool total marks: {{ $poolTotalMarks }}. Target will be capped at this value.
+                                </p>
+                            </div>
                         </div>
 
                         <div>

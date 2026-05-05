@@ -24,30 +24,42 @@ class Dashboard extends Component
                 return;
             }
 
-            // dd(now());
-
             $attemptedExamIds = $user->examSessions()->pluck('exam_id');
 
-            $this->exams = Exam::where('is_published', true)
+            $openExams = Exam::where('is_published', true)
+                ->where('access_mode', 'open')
                 ->whereNotIn('id', $attemptedExamIds)
                 ->where(function ($q) {
-                    $q->where(function ($inner) {
-                        $inner->where('starts_at', '>=', now())
-                            ->where('starts_at', '<=', now()->addHours(2));
-                    })
-                        ->orWhereNull('starts_at');
+                    $q->whereNull('starts_at')
+                        ->orWhere('starts_at', '<=', now());
                 })
+                ->pluck('id');
+
+            $assignedExams = Exam::where('is_published', true)
+                ->where('access_mode', 'restricted')
+                ->whereHas('assignments', fn ($q) => $q->where('user_id', $user->id))
+                ->whereNotIn('id', $attemptedExamIds)
                 ->where(function ($q) {
-                    $q->whereNull('starts_at') // open anytime
-                        ->orWhere('starts_at', '<=', now()); // has started (now or in the past)
+                    $q->whereNull('starts_at')
+                        ->orWhere('starts_at', '<=', now());
                 })
+                ->pluck('id');
+
+            $availableExamIds = $openExams->merge($assignedExams)->unique();
+
+            $this->exams = Exam::whereIn('id', $availableExamIds)
                 ->withCount('questions')
                 ->get();
 
             $this->attempted = $user->examSessions()
                 ->with('exam')
                 ->where('is_submitted', true)
-                ->get();
+                ->get()
+                ->filter(function ($session) {
+                    return $session->exam->allow_repeat_after_fail
+                        || $session->passed === true
+                        || $session->passed === null;
+                });
         } catch (\Throwable $e) {
             $this->exams = collect();
             $this->attempted = collect();

@@ -12,6 +12,8 @@ class ExamStart extends Component
 {
     public Exam $exam;
 
+    public string $accessDeniedReason = '';
+
     public function mount(Exam $exam): void
     {
         $user = auth()->user();
@@ -40,6 +42,13 @@ class ExamStart extends Component
             return;
         }
 
+        if (! $exam->isAssignedTo($user->id)) {
+            $this->accessDeniedReason = "You haven't been assigned to this exam. Contact your administrator.";
+            $this->exam = $exam->loadCount('questions');
+
+            return;
+        }
+
         $existingSubmittedSession = ExamSession::where('exam_id', $exam->id)
             ->where('user_id', $user->id)
             ->where('is_submitted', true)
@@ -52,6 +61,14 @@ class ExamStart extends Component
         ]);
 
         if ($existingSubmittedSession) {
+            $failedSession = $existingSubmittedSession->passed === false;
+            if ($failedSession && ! $exam->allow_repeat_after_fail) {
+                $this->accessDeniedReason = 'You have already taken this exam and did not pass. Re-takes are not allowed.';
+                $this->exam = $exam->loadCount('questions');
+
+                return;
+            }
+
             Log::info('[ExamStart] REDIRECT to results - already submitted');
             $this->redirectRoute('student.results', ['session' => $existingSubmittedSession]);
 

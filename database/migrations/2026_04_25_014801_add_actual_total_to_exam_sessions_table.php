@@ -10,6 +10,7 @@ return new class extends Migration
     {
         Schema::table('exam_sessions', function (Blueprint $table) {
             $table->unsignedInteger('total_received')->nullable()->after('total_marks');
+            $table->json('question_ids')->nullable();
         });
     }
 

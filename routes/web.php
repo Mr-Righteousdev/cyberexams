@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ExamExportController;
 use App\Livewire\Admin\Dashboard as AdminDashboard;
+use App\Livewire\Admin\ExamAssignments;
 use App\Livewire\Admin\ExamCreate;
 use App\Livewire\Admin\ExamIndex;
 use App\Livewire\Admin\ExamResults;
@@ -38,13 +39,14 @@ Route::get('/dashboard', function () {
     return redirect()->route('student.dashboard');
 })->middleware('auth')->name('dashboard');
 
-Route::middleware(['auth', 'verified', 'local.network'])->group(function () {
+Route::middleware(['auth', 'verified'])->group(function () {
     Route::middleware(['role:admin'])->prefix('admin')->name('admin.')->group(function () {
         Route::get('/dashboard', AdminDashboard::class)->name('dashboard');
 
         Route::get('/exams', ExamIndex::class)->name('exams.index');
         Route::get('/exams/create', ExamCreate::class)->name('exams.create');
         Route::get('/exams/{exam}/edit', ExamCreate::class)->name('exams.edit');
+        Route::get('/exams/{exam}/assignments', ExamAssignments::class)->name('exams.assignments');
         Route::get('/exams/{exam}/questions', QuestionIndex::class)->name('exams.questions.index');
         Route::get('/exams/{exam}/questions/create', QuestionCreate::class)->name('exams.questions.create');
         Route::get('/exams/{exam}/questions/{question}/edit', QuestionCreate::class)->name('exams.questions.edit');

@@ -13,6 +13,25 @@ class ExamIndex extends Component
 
     public string $viewMode = 'cards';
 
+    public ?int $examToDelete = null;
+
+    public function confirmDelete(int $examId): void
+    {
+        $this->examToDelete = $examId;
+        $this->modal('delete-exam')->show();
+    }
+
+    public function deleteExam(): void
+    {
+        Exam::findOrFail($this->examToDelete)->delete();
+
+        $this->examToDelete = null;
+        $this->modal('delete-exam')->close();
+
+        // optional toast
+        Flux::toast('Exam deleted successfully.', variant: 'danger');
+    }
+
     public function render()
     {
         $exams = Exam::latest()->paginate(10);

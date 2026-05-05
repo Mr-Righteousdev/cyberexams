@@ -81,6 +81,14 @@
                                 <div class="bg-blue-600 h-2 rounded-full" style="width: {{ $session['progress_percent'] }}%"></div>
                             </div>
                         </div>
+
+                        {{-- Actions --}}
+                        <div class="mt-4 pt-4 border-t flex justify-end gap-2">
+                            <flux:button size="sm" variant="danger" wire:click="forceSubmit({{ $session['id'] }})">
+                                <flux:icon name="x-circle" class="w-4 h-4 mr-1" />
+                                Submit Exam
+                            </flux:button>
+                        </div>
                     </flux:card>
                 @endforeach
             </div>

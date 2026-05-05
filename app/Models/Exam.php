@@ -23,6 +23,8 @@ class Exam extends Model
         'shuffle_options',
         'is_published',
         'max_tab_switches',
+        'access_mode',
+        'allow_repeat_after_fail',
     ];
 
     protected function casts(): array
@@ -34,6 +36,7 @@ class Exam extends Model
             'shuffle_options' => 'boolean',
             'is_published' => 'boolean',
             'max_tab_switches' => 'integer',
+            'allow_repeat_after_fail' => 'boolean',
         ];
     }
 
@@ -45,6 +48,11 @@ class Exam extends Model
     public function sessions(): HasMany
     {
         return $this->hasMany(ExamSession::class);
+    }
+
+    public function assignments(): HasMany
+    {
+        return $this->hasMany(ExamAssignment::class);
     }
 
     public function canBePublished(): array
@@ -70,13 +78,22 @@ class Exam extends Model
             ];
         }
 
+        if ($this->access_mode === 'restricted' && $this->assignments()->count() === 0) {
+            return [
+                'can_publish' => false,
+                'reason' => 'no_assignments',
+                'pool_marks' => $poolMarks,
+                'target_marks' => $target,
+            ];
+        }
+
         return ['can_publish' => true];
     }
 
     public function selectQuestionsForStudent(): Collection
     {
         $target = $this->total_marks_target ?? $this->questions()->sum('marks');
-        $allQuestions = $this->questions()->get()->shuffle();
+        $allQuestions = $this->questions()->with('options')->get()->shuffle();
         $selected = collect();
         $currentTotal = 0;
 
@@ -95,5 +112,26 @@ class Exam extends Model
         return $this->total_marks_target
             ? min($this->total_marks_target, $this->questions()->sum('marks'))
             : $this->questions()->sum('marks');
+    }
+
+    public function isAssignedTo(int $userId): bool
+    {
+        if ($this->access_mode === 'open') {
+            return true;
+        }
+
+        return $this->assignments()->where('user_id', $userId)->exists();
+    }
+
+    public function canStudentRetake(int $userId): bool
+    {
+        if ($this->allow_repeat_after_fail) {
+            return true;
+        }
+
+        return ! $this->sessions()
+            ->where('user_id', $userId)
+            ->where('is_submitted', true)
+            ->exists();
     }
 }

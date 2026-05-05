@@ -2,8 +2,11 @@
 
 namespace App\Livewire\Admin;
 
+use App\Models\ActivityLog;
 use App\Models\Exam;
 use App\Models\ExamSession;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Log;
 use Livewire\Component;
 
 class LiveMonitor extends Component
@@ -101,5 +104,48 @@ class LiveMonitor extends Component
     public function render()
     {
         return view('livewire.admin.live-monitor');
+    }
+
+    public function forceSubmit(int $sessionId): ?RedirectResponse
+    {
+        $session = ExamSession::findOrFail($sessionId);
+
+        if ($session->is_submitted) {
+            $this->dispatch('notify', ['message' => 'Session already submitted.', 'type' => 'warning']);
+
+            return null;
+        }
+
+        Log::info('[LiveMonitor] Admin force-submitting session', [
+            'session_id' => $session->id,
+            'user_id' => $session->user_id,
+            'exam_id' => $session->exam_id,
+        ]);
+
+        // Log the admin action
+        ActivityLog::create([
+            'session_id' => $session->id,
+            'event_type' => 'admin_force_submit',
+            'metadata' => [
+                'admin_id' => auth()->id(),
+                'admin_name' => auth()->user()->name,
+                'action' => 'Admin force-submitted exam',
+            ],
+            'occurred_at' => now(),
+        ]);
+
+        // Mark as submitted
+        $session->update([
+            'is_submitted' => true,
+            'submitted_at' => now(),
+            'is_flagged' => true,
+            'flag_reason' => 'Admin force-submitted: '.auth()->user()->name,
+        ]);
+
+        $this->dispatch('notify', ['message' => 'Exam submitted for '.$session->user->name, 'type' => 'success']);
+
+        $this->refreshActiveSessions();
+
+        return null;
     }
 }
